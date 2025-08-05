@@ -19,7 +19,7 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from app.ts (TypeScript backend)' });
 });
 
-// ルーターを使う場合（例）
+// import and use routes here
 // import partsRouter from './routes/parts';
 // app.use('/api/parts', partsRouter);
 
