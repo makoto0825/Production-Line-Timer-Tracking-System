@@ -4,8 +4,8 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom';
-import Login from './components/Login/Login';
-import Timer from './components/Timer/Timer';
+import Login from './pages/Login/Login';
+import Timer from './pages/Timer/Timer';
 
 const App = () => {
   return (
