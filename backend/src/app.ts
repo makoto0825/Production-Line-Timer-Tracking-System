@@ -3,7 +3,7 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-
+import buildsRouter from './routes/builds';
 // read .env file
 dotenv.config();
 
@@ -19,7 +19,8 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from app.ts (TypeScript backend)' });
 });
 
-// import and use routes here
+app.use('/api/builds', buildsRouter);
+
 // import partsRouter from './routes/parts';
 // app.use('/api/parts', partsRouter);
 
