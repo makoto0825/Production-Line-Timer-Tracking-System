@@ -2,7 +2,11 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 
 // component
-const Login = () => {
+interface LoginProps {
+  onLoginSuccess?: () => void;
+}
+
+const Login = ({ onLoginSuccess }: LoginProps) => {
   const [loginId, setLoginId] = useState('');
   const [buildNumber, setBuildNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +25,7 @@ const Login = () => {
           loginId: loginId,
           buildNumber: buildNumber,
         });
+        onLoginSuccess?.();
       } else {
         console.log('❌ Login failed: Build number does not exist');
         Swal.fire({
