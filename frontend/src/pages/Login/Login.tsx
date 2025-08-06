@@ -1,49 +1,14 @@
-import { useState } from 'react';
-import Swal from 'sweetalert2';
+import { useLogin } from './hooks/useLogin';
 
-// component
 const Login = () => {
-  const [loginId, setLoginId] = useState('');
-  const [buildNumber, setBuildNumber] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmitLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      console.log('🔍 Checking build number:', buildNumber);
-
-      const buildExists = await checkBuildNumber(buildNumber);
-
-      if (buildExists) {
-        console.log('✅ Login successful:', {
-          loginId: loginId,
-          buildNumber: buildNumber,
-        });
-      } else {
-        console.log('❌ Login failed: Build number does not exist');
-        Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: 'Build number does not exist. Please check and try again.',
-          confirmButtonColor: '#ec4899',
-          confirmButtonText: 'OK',
-        });
-      }
-    } catch (error) {
-      console.error('❌ Login error:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Connection Error',
-        text: 'Failed to connect to server. Please check your connection and try again.',
-        confirmButtonColor: '#ec4899',
-        confirmButtonText: 'OK',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    loginId,
+    buildNumber,
+    isLoading,
+    handleSubmitLogin,
+    handleLoginIdChange,
+    handleBuildNumberChange,
+  } = useLogin(); //custom hook
 
   return (
     <div className='min-h-screen bg-gradient-to-br via-blue-50 to-indigo-100 from-slate-50'>
@@ -88,7 +53,7 @@ const Login = () => {
                 type='text'
                 id='loginId'
                 value={loginId}
-                onChange={(e) => setLoginId(e.target.value)}
+                onChange={handleLoginIdChange}
                 placeholder='Enter your login ID'
                 className='px-4 py-3 w-full rounded-lg border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent'
                 required
@@ -107,7 +72,7 @@ const Login = () => {
                 type='text'
                 id='buildNumber'
                 value={buildNumber}
-                onChange={(e) => setBuildNumber(e.target.value)}
+                onChange={handleBuildNumberChange}
                 placeholder='Enter build number'
                 className='px-4 py-3 w-full rounded-lg border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent'
                 required
@@ -130,30 +95,3 @@ const Login = () => {
 };
 
 export default Login;
-
-// functions
-const checkBuildNumber = async (buildNumber: string) => {
-  try {
-    const response = await fetch(
-      `http://localhost:5000/api/builds/validate/${buildNumber}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Build number exists:', data);
-      return true;
-    } else {
-      console.log('❌ Build number not found');
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Can not connect to server:', error);
-    throw error;
-  }
-};
