@@ -1,4 +1,6 @@
-import { Card, Button, Input, InfoGrid } from './index';
+import Card from './commonComponents/Card';
+import Button from './commonComponents/Button';
+import InfoGrid from './commonComponents/InfoGrid';
 import { useTimer } from './hooks/useTimer';
 
 const Timer = () => {
@@ -79,15 +81,23 @@ const Timer = () => {
             title='Defects Entry'
             content={
               <div className='mx-auto max-w-md'>
-                <Input
-                  type='number'
-                  id='defects'
-                  label='Number of Defects Encountered'
-                  value={defects}
-                  onChange={handleDefectsChange}
-                  placeholder='Enter number of defects'
-                  min='0'
-                />
+                <div>
+                  <label
+                    htmlFor='defects'
+                    className='block mb-2 text-sm font-medium text-gray-700'
+                  >
+                    Number of Defects Encountered
+                  </label>
+                  <input
+                    type='number'
+                    id='defects'
+                    value={defects}
+                    onChange={handleDefectsChange}
+                    placeholder='Enter number of defects'
+                    min='0'
+                    className='px-4 py-3 w-full rounded-lg border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent'
+                  />
+                </div>
               </div>
             }
           />
