@@ -26,8 +26,5 @@ const buildSchema = new mongoose.Schema<IBuild>(
   }
 );
 
-// Add index for performance
-buildSchema.index({ buildNumber: 1 });
-
 // Create and export the model
 export const Build = mongoose.model<IBuild>('Build', buildSchema);

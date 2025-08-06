@@ -110,7 +110,7 @@ export default Login;
 const checkBuildNumber = async (buildNumber: string) => {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/builds/validate/${buildNumber}`,
+      `http://localhost:5000/api/builds/validate/${buildNumber}`,
       {
         method: 'GET',
         headers: {
