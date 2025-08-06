@@ -1,23 +1,21 @@
-import { useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import Login from './components/Login/Login';
 import Timer from './components/Timer/Timer';
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState<'login' | 'timer'>('login');
-
-  const handleLoginSuccess = () => {
-    setCurrentPage('timer');
-  };
-
-  const handleBackToLogin = () => {
-    setCurrentPage('login');
-  };
-
   return (
-    <>
-      {currentPage === 'login' && <Login onLoginSuccess={handleLoginSuccess} />}
-      {currentPage === 'timer' && <Timer onBackToLogin={handleBackToLogin} />}
-    </>
+    <Router>
+      <Routes>
+        <Route path='/' element={<Navigate to='/login' replace />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/timer' element={<Timer />} />
+      </Routes>
+    </Router>
   );
 };
 

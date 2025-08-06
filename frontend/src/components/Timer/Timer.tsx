@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Timer = () => {
+  const navigate = useNavigate();
   const [isPaused, setIsPaused] = useState(false);
   const [defects, setDefects] = useState('');
 
@@ -23,6 +25,7 @@ const Timer = () => {
 
   const handleNext = () => {
     console.log('Navigate to Page 3');
+    navigate('/login');
   };
 
   return (

@@ -1,12 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
-// component
-interface LoginProps {
-  onLoginSuccess?: () => void;
-}
-
-const Login = ({ onLoginSuccess }: LoginProps) => {
+const Login = () => {
+  const navigate = useNavigate();
   const [loginId, setLoginId] = useState('');
   const [buildNumber, setBuildNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +22,7 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
           loginId: loginId,
           buildNumber: buildNumber,
         });
-        onLoginSuccess?.();
+        navigate('/timer');
       } else {
         console.log('❌ Login failed: Build number does not exist');
         Swal.fire({
