@@ -128,7 +128,7 @@ const checkBuildNumber = async (buildNumber: string) => {
       return false;
     }
   } catch (error) {
-    console.error('❌ Error checking build number:', error);
-    return false;
+    console.error('❌ Can not connect to server:', error);
+    throw error;
   }
 };
