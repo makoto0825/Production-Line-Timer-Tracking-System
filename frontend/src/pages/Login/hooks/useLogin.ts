@@ -2,27 +2,40 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
+// Build data interface
+interface BuildData {
+  buildNumber: string;
+  numberOfParts: number;
+  timePerPart: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const useLogin = () => {
   const navigate = useNavigate();
   const [loginId, setLoginId] = useState('');
   const [buildNumber, setBuildNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [buildData, setBuildData] = useState<BuildData | null>(null);
 
-  //handle submit login
+  // Handle submit login
   const handleSubmitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      console.log('🔍 Checking build number:', buildNumber);
+      console.log('🔍 Fetching build data for:', buildNumber);
 
-      const buildExists = await checkBuildNumber(buildNumber);
+      const buildData = await fetchBuildData(buildNumber);
 
-      if (buildExists) {
+      if (buildData) {
         console.log('✅ Login successful:', {
           loginId: loginId,
           buildNumber: buildNumber,
+          buildData: buildData,
         });
+        setBuildData(buildData);
+        // TODO: Navigate to build info display page instead of timer
         navigate('/timer');
       } else {
         console.log('❌ Login failed: Build number does not exist');
@@ -37,7 +50,7 @@ export const useLogin = () => {
       }
     } catch (error) {
       console.error('❌ Login error:', error);
-      //show alert
+      // Show alert
       Swal.fire({
         icon: 'error',
         title: 'Connection Error',
@@ -50,12 +63,12 @@ export const useLogin = () => {
     }
   };
 
-  //handle login id change
+  // Handle login id change
   const handleLoginIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginId(e.target.value);
   };
 
-  //handle build number change
+  // Handle build number change
   const handleBuildNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBuildNumber(e.target.value);
   };
@@ -64,14 +77,17 @@ export const useLogin = () => {
     loginId,
     buildNumber,
     isLoading,
+    buildData,
     handleSubmitLogin,
     handleLoginIdChange,
     handleBuildNumberChange,
   };
 };
 
-// functions
-const checkBuildNumber = async (buildNumber: string) => {
+// Functions
+const fetchBuildData = async (
+  buildNumber: string
+): Promise<BuildData | null> => {
   try {
     const response = await fetch(
       `http://localhost:5000/api/builds/validate/${buildNumber}`,
@@ -84,12 +100,12 @@ const checkBuildNumber = async (buildNumber: string) => {
     );
 
     if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Build number exists:', data);
-      return true;
+      const result = await response.json();
+      console.log('✅ Build data fetched:', result.data);
+      return result.data;
     } else {
       console.log('❌ Build number not found');
-      return false;
+      return null;
     }
   } catch (error) {
     console.error('❌ Can not connect to server:', error);
