@@ -11,7 +11,10 @@ import {
   getIsPaused,
   getTimerDisplayData,
 } from '../utils/sessionUtils';
-import { handleTimeUpPopup } from '../utils/timeUpUtils';
+import {
+  handleTimeUpPopup,
+  checkPopupCountdownOnLoad,
+} from '../utils/timeUpUtils';
 import { timerPauseConfig } from '../../../modalUI/swalConfigs';
 
 export const useTimer = () => {
@@ -30,6 +33,14 @@ export const useTimer = () => {
       console.log('No session data found, redirecting to login');
       navigate('/login');
       return;
+    }
+
+    // Check if popup countdown should be resumed
+    if (checkPopupCountdownOnLoad()) {
+      // Show popup if countdown is still active
+      setHasTimeUpPopupShown(true); // Set flag to prevent double popup
+      handleTimeUpPopup();
+      return; // Popup countdown is being handled
     }
 
     // Show pause modal if status is paused

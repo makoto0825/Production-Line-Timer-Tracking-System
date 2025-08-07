@@ -15,6 +15,10 @@ export interface SessionData {
   status: string;
   totalPausedTime: number;
   defects: number;
+  // Popup countdown related properties
+  lastPopupTime?: string;
+  popupEndTime?: string;
+  popupCountdownActive?: boolean;
 }
 
 // createPauseRecord

@@ -104,7 +104,7 @@ export const timeUpPopupConfig: SweetAlertOptions = {
   html: `
     <div class="text-center space-y-4">
       <div class="text-2xl font-bold text-red-600 mb-4">
-        <span id="timeUpCountdown">00:10:00</span>
+        <span id="timeUpCountdown">10:00</span>
       </div>
       <p class="text-gray-700">Do you wish to continue?</p>
     </div>
