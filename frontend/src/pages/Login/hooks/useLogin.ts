@@ -31,14 +31,9 @@ export const useLogin = () => {
     try {
       console.log('🔍 Fetching build data for:', buildNumber);
 
-      const buildData = await fetchBuildData(buildNumber);
+      const buildData = await fetchBuildData(buildNumber); //fetch build data from server
 
       if (buildData) {
-        console.log('✅ Login successful:', {
-          loginId: loginId,
-          buildNumber: buildNumber,
-          buildData: buildData,
-        });
         setBuildData(buildData);
 
         // Show build info using Swal
@@ -61,18 +56,11 @@ export const useLogin = () => {
           localStorage.clear();
           localStorage.setItem('sessionData', JSON.stringify(sessionData));
 
-          console.log('🚀 Starting production:', {
-            loginId,
-            buildData,
-            startTime,
-          });
-
           // Navigate to timer
           navigate('/timer');
         }
         // If cancelled, stay on login page (no navigation needed)
       } else {
-        console.log('❌ Login failed: Build number does not exist');
         // Show alert
         Swal.fire(loginErrorConfig);
       }
@@ -106,7 +94,7 @@ export const useLogin = () => {
   };
 };
 
-// Functions
+// Fetch build data
 const fetchBuildData = async (
   buildNumber: string
 ): Promise<BuildData | null> => {
@@ -123,7 +111,6 @@ const fetchBuildData = async (
 
     if (response.ok) {
       const result = await response.json();
-      console.log('✅ Build data fetched:', result.data);
       return result.data;
     } else {
       console.log('❌ Build number not found');
