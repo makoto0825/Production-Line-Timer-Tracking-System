@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import {
+  createBuildInfoConfig,
+  loginErrorConfig,
+  connectionErrorConfig,
+} from '../modalUI/swalConfigs';
 
 // Build data interface
 interface BuildData {
@@ -35,29 +40,39 @@ export const useLogin = () => {
           buildData: buildData,
         });
         setBuildData(buildData);
-        // TODO: Navigate to build info display page instead of timer
-        navigate('/timer');
+
+        // Show build info using Swal
+        const buildInfoConfig = createBuildInfoConfig(loginId, buildData);
+        const result = await Swal.fire(buildInfoConfig);
+
+        if (result.isConfirmed) {
+          // Store start time and navigate to timer
+          const startTime = new Date().toISOString();
+          console.log('🚀 Starting production:', {
+            loginId,
+            buildData,
+            startTime,
+          });
+
+          // Navigate to timer with build data and start time
+          navigate('/timer', {
+            state: {
+              buildData,
+              loginId,
+              startTime,
+            },
+          });
+        }
+        // If cancelled, stay on login page (no navigation needed)
       } else {
         console.log('❌ Login failed: Build number does not exist');
         // Show alert
-        Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: 'Build number does not exist. Please check and try again.',
-          confirmButtonColor: '#ec4899',
-          confirmButtonText: 'OK',
-        });
+        Swal.fire(loginErrorConfig);
       }
     } catch (error) {
       console.error('❌ Login error:', error);
       // Show alert
-      Swal.fire({
-        icon: 'error',
-        title: 'Connection Error',
-        text: 'Failed to connect to server. Please check your connection and try again.',
-        confirmButtonColor: '#ec4899',
-        confirmButtonText: 'OK',
-      });
+      Swal.fire(connectionErrorConfig);
     } finally {
       setIsLoading(false);
     }

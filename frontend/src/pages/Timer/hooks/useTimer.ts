@@ -2,17 +2,33 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
-export const useTimer = () => {
+interface BuildData {
+  buildNumber: string;
+  numberOfParts: number;
+  timePerPart: number;
+}
+
+interface UseTimerProps {
+  buildData?: BuildData;
+  loginId?: string;
+  startTime?: string;
+}
+
+export const useTimer = ({
+  buildData,
+  loginId,
+  startTime,
+}: UseTimerProps = {}) => {
   const navigate = useNavigate();
   const [isPaused, setIsPaused] = useState(false);
   const [defects, setDefects] = useState('');
 
-  // Mock data for UI demonstration
-  const mockData = {
-    loginId: 'John Doe',
-    buildNumber: 'B00001',
-    numberOfParts: 25,
-    timePerPart: 2,
+  // Use actual build data or fallback to mock data
+  const timerData = {
+    loginId: loginId || 'John Doe',
+    buildNumber: buildData?.buildNumber || 'B00001',
+    numberOfParts: buildData?.numberOfParts || 25,
+    timePerPart: buildData?.timePerPart || 2,
     timeLeft: '00:45:30', // Mock timer display
   };
 
@@ -60,7 +76,7 @@ export const useTimer = () => {
   return {
     isPaused,
     defects,
-    mockData,
+    mockData: timerData,
     handlePause,
     handleNext,
     handleDefectsChange,

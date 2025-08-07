@@ -1,9 +1,23 @@
+import { useLocation } from 'react-router-dom';
 import Card from './commonComponents/Card';
 import Button from './commonComponents/Button';
 import InfoGrid from './commonComponents/InfoGrid';
 import { useTimer } from './hooks/useTimer';
 
+interface LocationState {
+  buildData: {
+    buildNumber: string;
+    numberOfParts: number;
+    timePerPart: number;
+  };
+  loginId: string;
+  startTime: string;
+}
+
 const Timer = () => {
+  const location = useLocation();
+  const { buildData, loginId, startTime } =
+    (location.state as LocationState) || {};
   const {
     isPaused,
     defects,
@@ -11,7 +25,11 @@ const Timer = () => {
     handlePause,
     handleNext,
     handleDefectsChange,
-  } = useTimer(); //custom hook
+  } = useTimer({
+    buildData,
+    loginId,
+    startTime,
+  }); //custom hook
 
   return (
     <div className='min-h-screen bg-gradient-to-br via-blue-50 to-indigo-100 from-slate-50'>
