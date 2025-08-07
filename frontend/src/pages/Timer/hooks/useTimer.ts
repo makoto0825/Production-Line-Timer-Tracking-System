@@ -4,7 +4,6 @@ import Swal from 'sweetalert2';
 import {
   updateSessionToPaused,
   updateSessionToActive,
-  calculateTotalPausedTime,
 } from '../utils/pauseUtils';
 import { calculateTimeLeft, formatTime } from '../utils/timeUtils';
 import {
@@ -114,14 +113,6 @@ export const useTimer = () => {
     setDefects(e.target.value);
   };
 
-  // ===== UTILITY FUNCTIONS =====
-  // Calculate total paused time
-  const getTotalPausedTime = (): number => {
-    const sessionData = getSessionData();
-    if (!sessionData) return 0;
-    return calculateTotalPausedTime(sessionData.pauseRecords);
-  };
-
   // Generate timer display data
   const timerData = getTimerDisplayData(timeLeft);
 
@@ -132,6 +123,5 @@ export const useTimer = () => {
     handlePause,
     handleNext,
     handleDefectsChange,
-    getTotalPausedTime,
   };
 };
