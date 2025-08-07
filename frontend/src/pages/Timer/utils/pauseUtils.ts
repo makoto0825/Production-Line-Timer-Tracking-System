@@ -50,11 +50,10 @@ export const updatePauseRecord = (
     return record;
   });
 
-  console.log('updatePauseRecord - result:', result);
   return result;
 };
 
-// 総一時停止時間を計算（秒単位）
+// calculateTotalPausedTime
 export const calculateTotalPausedTime = (
   pauseRecords: PauseRecord[]
 ): number => {
@@ -75,9 +74,6 @@ export const updateSessionToPaused = (
   const pauseRecord = createPauseRecord();
   const pauseRecords = sessionData.pauseRecords || [];
 
-  console.log('updateSessionToPaused - input pauseRecords:', pauseRecords);
-  console.log('updateSessionToPaused - new pauseRecord:', pauseRecord);
-
   const updatedPauseRecords = [...pauseRecords, pauseRecord];
   const totalPausedTime = calculateTotalPausedTime(updatedPauseRecords);
 
@@ -88,12 +84,6 @@ export const updateSessionToPaused = (
     status: 'paused',
   };
 
-  console.log(
-    'updateSessionToPaused - result pauseRecords:',
-    result.pauseRecords
-  );
-  console.log('updateSessionToPaused - totalPausedTime:', totalPausedTime);
-
   return result;
 };
 
@@ -103,16 +93,8 @@ export const updateSessionToActive = (
 ): SessionData => {
   const pauseRecords = sessionData.pauseRecords || [];
 
-  console.log('updateSessionToActive - input pauseRecords:', pauseRecords);
-
   const updatedPauseRecords = updatePauseRecord(pauseRecords);
   const totalPausedTime = calculateTotalPausedTime(updatedPauseRecords);
-
-  console.log(
-    'updateSessionToActive - updated pauseRecords:',
-    updatedPauseRecords
-  );
-  console.log('updateSessionToActive - totalPausedTime:', totalPausedTime);
 
   return {
     ...sessionData,
