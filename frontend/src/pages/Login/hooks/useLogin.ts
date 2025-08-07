@@ -5,7 +5,7 @@ import {
   createBuildInfoConfig,
   loginErrorConfig,
   connectionErrorConfig,
-} from '../modalUI/swalConfigs';
+} from '../../../modalUI/swalConfigs';
 
 // Build data interface
 interface BuildData {

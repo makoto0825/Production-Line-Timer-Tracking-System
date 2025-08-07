@@ -1,23 +1,12 @@
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import Card from './commonComponents/Card';
 import Button from './commonComponents/Button';
 import InfoGrid from './commonComponents/InfoGrid';
 import { useTimer } from './hooks/useTimer';
 
-interface LocationState {
-  buildData: {
-    buildNumber: string;
-    numberOfParts: number;
-    timePerPart: number;
-  };
-  loginId: string;
-  startTime: string;
-}
-
 const Timer = () => {
-  const location = useLocation();
-  const { buildData, loginId, startTime } =
-    (location.state as LocationState) || {};
+  const navigate = useNavigate();
   const {
     isPaused,
     defects,
@@ -25,11 +14,16 @@ const Timer = () => {
     handlePause,
     handleNext,
     handleDefectsChange,
-  } = useTimer({
-    buildData,
-    loginId,
-    startTime,
-  }); //custom hook
+  } = useTimer(); //custom hook - no props needed
+
+  // Check if session exists in localStorage
+  useEffect(() => {
+    const sessionData = localStorage.getItem('sessionData');
+    if (!sessionData) {
+      console.log('No session data found, redirecting to login');
+      navigate('/login');
+    }
+  }, [navigate]);
 
   return (
     <div className='min-h-screen bg-gradient-to-br via-blue-50 to-indigo-100 from-slate-50'>
@@ -69,7 +63,13 @@ const Timer = () => {
             content={
               <>
                 <div className='mb-6 text-center'>
-                  <div className='inline-block p-8 bg-gradient-to-r from-pink-500 to-orange-500 rounded-2xl shadow-lg'>
+                  <div
+                    className={`inline-block p-8 rounded-2xl shadow-lg ${
+                      mockData.timeLeft.startsWith('-')
+                        ? 'bg-gradient-to-r from-pink-500 to-orange-500'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                    }`}
+                  >
                     <div className='text-4xl font-black tracking-wider text-white md:text-6xl'>
                       {mockData.timeLeft}
                     </div>

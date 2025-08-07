@@ -1,84 +1,146 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import type { SessionData } from '../utils/pauseUtils';
+import {
+  updateSessionToPaused,
+  updateSessionToActive,
+  calculateTotalPausedTime,
+} from '../utils/pauseUtils';
+import { calculateTimeLeft, formatTime } from '../utils/timeUtils';
+import { timerPauseConfig } from '../../../modalUI/swalConfigs';
 
-interface BuildData {
-  buildNumber: string;
-  numberOfParts: number;
-  timePerPart: number;
-}
-
-interface UseTimerProps {
-  buildData?: BuildData;
-  loginId?: string;
-  startTime?: string;
-}
-
-export const useTimer = ({
-  buildData,
-  loginId,
-  startTime,
-}: UseTimerProps = {}) => {
+export const useTimer = () => {
   const navigate = useNavigate();
-  const [isPaused, setIsPaused] = useState(false);
   const [defects, setDefects] = useState('');
+  const [timeLeft, setTimeLeft] = useState('00:00:00');
 
-  // Use actual build data or fallback to mock data
-  const timerData = {
-    loginId: loginId || 'John Doe',
-    buildNumber: buildData?.buildNumber || 'B00001',
-    numberOfParts: buildData?.numberOfParts || 25,
-    timePerPart: buildData?.timePerPart || 2,
-    timeLeft: '00:45:30', // Mock timer display
+  // Get session data from localStorage
+  const getSessionData = (): SessionData | null => {
+    const storedSession = localStorage.getItem('sessionData');
+    if (storedSession) {
+      try {
+        const parsedSession = JSON.parse(storedSession);
+        return {
+          ...parsedSession,
+          pauseRecords: parsedSession.pauseRecords || [],
+        };
+      } catch (error) {
+        console.error('Error parsing session data:', error);
+        return null;
+      }
+    }
+    return null;
   };
 
-  //handle pause
+  // Get pause status
+  const getIsPaused = (): boolean => {
+    const sessionData = getSessionData();
+    return sessionData?.status === 'paused';
+  };
+
+  // Check session data and redirect if not exists
+  useEffect(() => {
+    const sessionData = getSessionData();
+    if (!sessionData) {
+      console.log('No session data found, redirecting to login');
+      navigate('/login');
+      return;
+    }
+
+    // Show pause modal if status is paused
+    if (sessionData.status === 'paused') {
+      Swal.fire(timerPauseConfig).then((result) => {
+        if (result.isConfirmed) {
+          handlePauseEnd();
+        }
+      });
+    }
+  }, [navigate]);
+
+  // Real-time timer update
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const sessionData = getSessionData();
+      if (!sessionData || getIsPaused()) return;
+
+      const timeLeftSeconds = calculateTimeLeft(
+        sessionData.buildData.numberOfParts,
+        sessionData.buildData.timePerPart,
+        sessionData.startTime,
+        sessionData.totalPausedTime
+      );
+
+      setTimeLeft(formatTime(timeLeftSeconds));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Generate timer display data
+  const timerData = {
+    loginId: getSessionData()?.loginId || 'Unknown User',
+    buildNumber: getSessionData()?.buildData?.buildNumber || 'Unknown Build',
+    numberOfParts: getSessionData()?.buildData?.numberOfParts || 0,
+    timePerPart: getSessionData()?.buildData?.timePerPart || 0,
+    timeLeft: timeLeft,
+  };
+
+  // Handle pause start
+  const handlePauseStart = () => {
+    const sessionData = getSessionData();
+    if (!sessionData) return;
+
+    const updatedSessionData = updateSessionToPaused(sessionData);
+    localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+  };
+
+  // Handle pause end (resume)
+  const handlePauseEnd = () => {
+    const sessionData = getSessionData();
+    if (!sessionData) return;
+
+    const updatedSessionData = updateSessionToActive(sessionData);
+    localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+  };
+
+  // Handle pause with modal
   const handlePause = () => {
-    setIsPaused(true);
-    //show alert
-    Swal.fire({
-      title: 'Timer Paused',
-      html: `
-        <div class="text-center">
-          <p>Work is currently paused. Click Resume to continue.</p>
-        </div>
-      `,
-      icon: 'info',
-      showCancelButton: false,
-      confirmButtonText: 'Resume',
-      confirmButtonColor: '#ec4899',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showCloseButton: false,
-      customClass: {
-        popup: 'rounded-2xl',
-        confirmButton:
-          'bg-gradient-to-r from-pink-500 to-orange-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200',
-      },
-    }).then((result) => {
+    handlePauseStart();
+
+    // Show pause modal using config
+    Swal.fire(timerPauseConfig).then((result) => {
       if (result.isConfirmed) {
-        setIsPaused(false);
+        handlePauseEnd();
       }
     });
   };
 
-  //handle next
+  // Handle next page navigation
   const handleNext = () => {
     console.log('Navigate to Page 3');
     navigate('/login');
   };
 
-  //handle defects change
+  // Handle defects input change
   const handleDefectsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDefects(e.target.value);
   };
 
+  // Calculate total paused time
+  const getTotalPausedTime = (): number => {
+    const sessionData = getSessionData();
+    if (!sessionData) return 0;
+    return calculateTotalPausedTime(sessionData.pauseRecords);
+  };
+
   return {
-    isPaused,
+    isPaused: getIsPaused(),
     defects,
     mockData: timerData,
     handlePause,
     handleNext,
     handleDefectsChange,
+    getTotalPausedTime,
   };
 };
