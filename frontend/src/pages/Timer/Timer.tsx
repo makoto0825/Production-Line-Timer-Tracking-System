@@ -63,7 +63,13 @@ const Timer = () => {
             content={
               <>
                 <div className='mb-6 text-center'>
-                  <div className='inline-block p-8 bg-gradient-to-r from-pink-500 to-orange-500 rounded-2xl shadow-lg'>
+                  <div
+                    className={`inline-block p-8 rounded-2xl shadow-lg ${
+                      mockData.timeLeft.startsWith('-')
+                        ? 'bg-gradient-to-r from-pink-500 to-orange-500'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                    }`}
+                  >
                     <div className='text-4xl font-black tracking-wider text-white md:text-6xl'>
                       {mockData.timeLeft}
                     </div>
