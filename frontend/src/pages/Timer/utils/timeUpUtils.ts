@@ -16,6 +16,11 @@ interface CountdownState {
   isActive: boolean;
 }
 
+interface PopupInteraction {
+  type: 'YES' | 'NO' | 'AUTO_SUBMIT';
+  timestamp: string;
+}
+
 // Main function: Handle time-up popup display and user interaction with countdown
 export const handleTimeUpPopup = async () => {
   console.log('Showing time-up popup with countdown...');
@@ -83,6 +88,31 @@ export const scheduleNextTimeUpPopup = () => {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+// Record popup interaction
+const recordPopupInteraction = (type: PopupInteraction['type']): void => {
+  const sessionData = getSessionData();
+  if (!sessionData) {
+    console.warn('No session data found, cannot record popup interaction');
+    return;
+  }
+
+  const interaction: PopupInteraction = {
+    type,
+    timestamp: new Date().toISOString(),
+  };
+
+  const currentInteractions = sessionData.popupInteractions || [];
+  const updatedSessionData = {
+    ...sessionData,
+    popupInteractions: [...currentInteractions, interaction],
+  };
+
+  localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+  console.log(
+    `Recorded popup interaction: ${type} at ${interaction.timestamp}`
+  );
+};
 
 // Format countdown time (mm:ss format)
 const formatCountdown = (seconds: number): string => {
@@ -224,10 +254,12 @@ const handleUserInteraction = (result: {
 }): void => {
   if (result.isConfirmed) {
     console.log('User clicked Yes - continue work');
+    recordPopupInteraction('YES');
     // TODO: Schedule next popup in 10 minutes
     // scheduleNextTimeUpPopup();
   } else if (result.dismiss === Swal.DismissReason.cancel) {
     console.log('User clicked No - continue work');
+    recordPopupInteraction('NO');
     // TODO: Schedule next popup in 10 minutes
     // scheduleNextTimeUpPopup();
   }
@@ -236,6 +268,9 @@ const handleUserInteraction = (result: {
 // Handle auto-submit when countdown reaches 0
 const handleAutoSubmit = () => {
   console.log('Auto-submitting session data...');
+
+  // Record auto-submit interaction
+  recordPopupInteraction('AUTO_SUBMIT');
 
   // TODO: Collect session data for submission
   // const sessionData = collectSessionDataForSubmission();

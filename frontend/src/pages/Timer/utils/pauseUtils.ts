@@ -3,6 +3,11 @@ export interface PauseRecord {
   endTime?: string;
 }
 
+export interface PopupInteraction {
+  type: 'YES' | 'NO' | 'AUTO_SUBMIT';
+  timestamp: string;
+}
+
 export interface SessionData {
   startTime: string;
   pauseRecords: PauseRecord[];
@@ -19,6 +24,8 @@ export interface SessionData {
   lastPopupTime?: string;
   popupEndTime?: string;
   popupCountdownActive?: boolean;
+  // Popup interactions tracking
+  popupInteractions?: PopupInteraction[];
 }
 
 // createPauseRecord
