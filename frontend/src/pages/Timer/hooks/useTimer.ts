@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -8,28 +8,41 @@ interface BuildData {
   timePerPart: number;
 }
 
-interface UseTimerProps {
-  buildData?: BuildData;
-  loginId?: string;
-  startTime?: string;
+interface SessionData {
+  loginId: string;
+  buildData: BuildData;
+  startTime: string;
+  status: string;
+  totalPausedTime: number;
+  defects: number;
 }
 
-export const useTimer = ({
-  buildData,
-  loginId,
-  startTime,
-}: UseTimerProps = {}) => {
+export const useTimer = () => {
   const navigate = useNavigate();
   const [isPaused, setIsPaused] = useState(false);
   const [defects, setDefects] = useState('');
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
 
-  // Use actual build data or fallback to mock data
+  // Load session data from localStorage on component mount
+  useEffect(() => {
+    const storedSession = localStorage.getItem('sessionData');
+    if (storedSession) {
+      try {
+        const parsedSession = JSON.parse(storedSession);
+        setSessionData(parsedSession);
+      } catch (error) {
+        console.error('Error parsing session data:', error);
+      }
+    }
+  }, []);
+
+  // Use session data from localStorage or fallback to default values
   const timerData = {
-    loginId: loginId || 'John Doe',
-    buildNumber: buildData?.buildNumber || 'B00001',
-    numberOfParts: buildData?.numberOfParts || 25,
-    timePerPart: buildData?.timePerPart || 2,
-    timeLeft: '00:45:30', // Mock timer display
+    loginId: sessionData?.loginId || 'Unknown User',
+    buildNumber: sessionData?.buildData?.buildNumber || 'Unknown Build',
+    numberOfParts: sessionData?.buildData?.numberOfParts || 0,
+    timePerPart: sessionData?.buildData?.timePerPart || 0,
+    timeLeft: '00:45:30', // Mock timer display - will be calculated based on startTime
   };
 
   //handle pause

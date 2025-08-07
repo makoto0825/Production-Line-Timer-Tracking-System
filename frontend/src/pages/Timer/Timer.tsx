@@ -1,23 +1,12 @@
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import Card from './commonComponents/Card';
 import Button from './commonComponents/Button';
 import InfoGrid from './commonComponents/InfoGrid';
 import { useTimer } from './hooks/useTimer';
 
-interface LocationState {
-  buildData: {
-    buildNumber: string;
-    numberOfParts: number;
-    timePerPart: number;
-  };
-  loginId: string;
-  startTime: string;
-}
-
 const Timer = () => {
-  const location = useLocation();
-  const { buildData, loginId, startTime } =
-    (location.state as LocationState) || {};
+  const navigate = useNavigate();
   const {
     isPaused,
     defects,
@@ -25,11 +14,16 @@ const Timer = () => {
     handlePause,
     handleNext,
     handleDefectsChange,
-  } = useTimer({
-    buildData,
-    loginId,
-    startTime,
-  }); //custom hook
+  } = useTimer(); //custom hook - no props needed
+
+  // Check if session exists in localStorage
+  useEffect(() => {
+    const sessionData = localStorage.getItem('sessionData');
+    if (!sessionData) {
+      console.log('No session data found, redirecting to login');
+      navigate('/login');
+    }
+  }, [navigate]);
 
   return (
     <div className='min-h-screen bg-gradient-to-br via-blue-50 to-indigo-100 from-slate-50'>
