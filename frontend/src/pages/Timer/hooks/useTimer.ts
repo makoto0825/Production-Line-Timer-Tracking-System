@@ -1,44 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import type { SessionData } from '../utils/pauseUtils';
 import {
   updateSessionToPaused,
   updateSessionToActive,
   calculateTotalPausedTime,
 } from '../utils/pauseUtils';
 import { calculateTimeLeft, formatTime } from '../utils/timeUtils';
+import {
+  getSessionData,
+  getIsPaused,
+  getTimerDisplayData,
+} from '../utils/sessionUtils';
+import { handleTimeUpPopup } from '../utils/timeUpUtils';
 import { timerPauseConfig } from '../../../modalUI/swalConfigs';
 
 export const useTimer = () => {
   const navigate = useNavigate();
+
+  // ===== STATE MANAGEMENT =====
   const [defects, setDefects] = useState('');
   const [timeLeft, setTimeLeft] = useState('00:00:00');
+  const [hasTimeUpPopupShown, setHasTimeUpPopupShown] = useState(false);
 
-  // Get session data from localStorage
-  const getSessionData = (): SessionData | null => {
-    const storedSession = localStorage.getItem('sessionData');
-    if (storedSession) {
-      try {
-        const parsedSession = JSON.parse(storedSession);
-        return {
-          ...parsedSession,
-          pauseRecords: parsedSession.pauseRecords || [],
-        };
-      } catch (error) {
-        console.error('Error parsing session data:', error);
-        return null;
-      }
-    }
-    return null;
-  };
-
-  // Get pause status
-  const getIsPaused = (): boolean => {
-    const sessionData = getSessionData();
-    return sessionData?.status === 'paused';
-  };
-
+  // ===== SESSION MANAGEMENT =====
   // Check session data and redirect if not exists
   useEffect(() => {
     const sessionData = getSessionData();
@@ -58,7 +43,8 @@ export const useTimer = () => {
     }
   }, [navigate]);
 
-  // Real-time timer update
+  // ===== TIMER LOGIC =====
+  // Real-time timer update with time-up detection
   useEffect(() => {
     const interval = setInterval(() => {
       const sessionData = getSessionData();
@@ -72,20 +58,19 @@ export const useTimer = () => {
       );
 
       setTimeLeft(formatTime(timeLeftSeconds));
+
+      // Time-up detection: when timeLeft becomes 0 or negative
+      if (timeLeftSeconds <= 0 && !hasTimeUpPopupShown) {
+        console.log('Time is up! Triggering popup...');
+        setHasTimeUpPopupShown(true);
+        handleTimeUpPopup();
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [hasTimeUpPopupShown]);
 
-  // Generate timer display data
-  const timerData = {
-    loginId: getSessionData()?.loginId || 'Unknown User',
-    buildNumber: getSessionData()?.buildData?.buildNumber || 'Unknown Build',
-    numberOfParts: getSessionData()?.buildData?.numberOfParts || 0,
-    timePerPart: getSessionData()?.buildData?.timePerPart || 0,
-    timeLeft: timeLeft,
-  };
-
+  // ===== PAUSE FUNCTIONALITY =====
   // Handle pause start
   const handlePauseStart = () => {
     const sessionData = getSessionData();
@@ -116,23 +101,29 @@ export const useTimer = () => {
     });
   };
 
+  // ===== NAVIGATION =====
   // Handle next page navigation
   const handleNext = () => {
     console.log('Navigate to Page 3');
-    navigate('/login');
+    navigate('/login'); // TODO: Change to actual Page 3 route when implemented
   };
 
+  // ===== USER INPUT HANDLERS =====
   // Handle defects input change
   const handleDefectsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDefects(e.target.value);
   };
 
+  // ===== UTILITY FUNCTIONS =====
   // Calculate total paused time
   const getTotalPausedTime = (): number => {
     const sessionData = getSessionData();
     if (!sessionData) return 0;
     return calculateTotalPausedTime(sessionData.pauseRecords);
   };
+
+  // Generate timer display data
+  const timerData = getTimerDisplayData(timeLeft);
 
   return {
     isPaused: getIsPaused(),
