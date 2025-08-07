@@ -54,16 +54,16 @@ export const updatePauseRecord = (
   return result;
 };
 
-// calculateTotalPausedTime
+// 総一時停止時間を計算（秒単位）
 export const calculateTotalPausedTime = (
   pauseRecords: PauseRecord[]
 ): number => {
-  if (!pauseRecords || !Array.isArray(pauseRecords)) return 0; // 配列チェックを追加
+  if (!pauseRecords || !Array.isArray(pauseRecords)) return 0;
 
   return pauseRecords.reduce((total, pause) => {
     const endTime = pause.endTime ? new Date(pause.endTime) : new Date();
     const duration =
-      (endTime.getTime() - new Date(pause.startTime).getTime()) / 1000 / 60; // 分単位
+      (endTime.getTime() - new Date(pause.startTime).getTime()) / 1000; // 秒単位
     return total + duration;
   }, 0);
 };
@@ -73,14 +73,18 @@ export const updateSessionToPaused = (
   sessionData: SessionData
 ): SessionData => {
   const pauseRecord = createPauseRecord();
-  const pauseRecords = sessionData.pauseRecords || []; // フォールバック処理を追加
+  const pauseRecords = sessionData.pauseRecords || [];
 
   console.log('updateSessionToPaused - input pauseRecords:', pauseRecords);
   console.log('updateSessionToPaused - new pauseRecord:', pauseRecord);
 
+  const updatedPauseRecords = [...pauseRecords, pauseRecord];
+  const totalPausedTime = calculateTotalPausedTime(updatedPauseRecords);
+
   const result = {
     ...sessionData,
-    pauseRecords: [...pauseRecords, pauseRecord],
+    pauseRecords: updatedPauseRecords,
+    totalPausedTime,
     status: 'paused',
   };
 
@@ -88,6 +92,7 @@ export const updateSessionToPaused = (
     'updateSessionToPaused - result pauseRecords:',
     result.pauseRecords
   );
+  console.log('updateSessionToPaused - totalPausedTime:', totalPausedTime);
 
   return result;
 };
@@ -98,16 +103,21 @@ export const updateSessionToActive = (
 ): SessionData => {
   const pauseRecords = sessionData.pauseRecords || [];
 
+  console.log('updateSessionToActive - input pauseRecords:', pauseRecords);
+
   const updatedPauseRecords = updatePauseRecord(pauseRecords);
+  const totalPausedTime = calculateTotalPausedTime(updatedPauseRecords);
 
   console.log(
     'updateSessionToActive - updated pauseRecords:',
     updatedPauseRecords
   );
+  console.log('updateSessionToActive - totalPausedTime:', totalPausedTime);
 
   return {
     ...sessionData,
     pauseRecords: updatedPauseRecords,
+    totalPausedTime,
     status: 'active',
   };
 };
