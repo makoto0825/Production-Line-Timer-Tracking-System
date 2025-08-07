@@ -46,22 +46,29 @@ export const useLogin = () => {
         const result = await Swal.fire(buildInfoConfig);
 
         if (result.isConfirmed) {
-          // Store start time and navigate to timer
+          // Store start time and save to localStorage
           const startTime = new Date().toISOString();
+          const sessionData = {
+            loginId,
+            buildData,
+            startTime,
+            status: 'active',
+            totalPausedTime: 0,
+            defects: 0,
+          };
+
+          // Save to localStorage
+          localStorage.clear();
+          localStorage.setItem('sessionData', JSON.stringify(sessionData));
+
           console.log('🚀 Starting production:', {
             loginId,
             buildData,
             startTime,
           });
 
-          // Navigate to timer with build data and start time
-          navigate('/timer', {
-            state: {
-              buildData,
-              loginId,
-              startTime,
-            },
-          });
+          // Navigate to timer
+          navigate('/timer');
         }
         // If cancelled, stay on login page (no navigation needed)
       } else {
