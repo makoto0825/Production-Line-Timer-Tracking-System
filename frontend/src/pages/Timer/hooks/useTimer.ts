@@ -45,6 +45,16 @@ export const useTimer = () => {
     if (!sessionData) {
       console.log('No session data found, redirecting to login');
       navigate('/login');
+      return;
+    }
+
+    // Show pause modal if status is paused
+    if (sessionData.status === 'paused') {
+      Swal.fire(timerPauseConfig).then((result) => {
+        if (result.isConfirmed) {
+          handlePauseEnd();
+        }
+      });
     }
   }, [navigate]);
 
