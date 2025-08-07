@@ -75,3 +75,25 @@ export const connectionErrorConfig: SweetAlertOptions = {
   confirmButtonColor: '#ec4899',
   confirmButtonText: 'OK',
 };
+
+// Timer pause Swal configuration
+export const timerPauseConfig: SweetAlertOptions = {
+  title: 'Timer Paused',
+  html: `
+    <div class="text-center">
+      <p>Work is currently paused. Click Resume to continue.</p>
+    </div>
+  `,
+  icon: 'info',
+  showCancelButton: false,
+  confirmButtonText: 'Resume',
+  confirmButtonColor: '#ec4899',
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+  showCloseButton: false,
+  customClass: {
+    popup: 'rounded-2xl',
+    confirmButton:
+      'bg-gradient-to-r from-pink-500 to-orange-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200',
+  },
+};

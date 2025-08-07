@@ -1,97 +1,115 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-
-interface BuildData {
-  buildNumber: string;
-  numberOfParts: number;
-  timePerPart: number;
-}
-
-interface SessionData {
-  loginId: string;
-  buildData: BuildData;
-  startTime: string;
-  status: string;
-  totalPausedTime: number;
-  defects: number;
-}
+import type { SessionData } from '../utils/pauseUtils';
+import {
+  updateSessionToPaused,
+  updateSessionToActive,
+  calculateTotalPausedTime,
+} from '../utils/pauseUtils';
+import { timerPauseConfig } from '../../../modalUI/swalConfigs';
 
 export const useTimer = () => {
   const navigate = useNavigate();
-  const [isPaused, setIsPaused] = useState(false);
   const [defects, setDefects] = useState('');
-  const [sessionData, setSessionData] = useState<SessionData | null>(null);
 
-  // Load session data from localStorage on component mount
-  useEffect(() => {
+  // getSessionData
+  const getSessionData = (): SessionData | null => {
     const storedSession = localStorage.getItem('sessionData');
     if (storedSession) {
       try {
         const parsedSession = JSON.parse(storedSession);
-        setSessionData(parsedSession);
+        return {
+          ...parsedSession,
+          pauseRecords: parsedSession.pauseRecords || [],
+        };
       } catch (error) {
         console.error('Error parsing session data:', error);
+        return null;
       }
     }
-  }, []);
+    return null;
+  };
 
-  // Use session data from localStorage or fallback to default values
+  // getIsPaused
+  const getIsPaused = (): boolean => {
+    const sessionData = getSessionData();
+    return sessionData?.status === 'paused';
+  };
+
+  // checkSessionData
+  useEffect(() => {
+    const sessionData = getSessionData();
+    if (!sessionData) {
+      console.log('No session data found, redirecting to login');
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  // getTimerData
   const timerData = {
-    loginId: sessionData?.loginId || 'Unknown User',
-    buildNumber: sessionData?.buildData?.buildNumber || 'Unknown Build',
-    numberOfParts: sessionData?.buildData?.numberOfParts || 0,
-    timePerPart: sessionData?.buildData?.timePerPart || 0,
+    loginId: getSessionData()?.loginId || 'Unknown User',
+    buildNumber: getSessionData()?.buildData?.buildNumber || 'Unknown Build',
+    numberOfParts: getSessionData()?.buildData?.numberOfParts || 0,
+    timePerPart: getSessionData()?.buildData?.timePerPart || 0,
     timeLeft: '00:45:30', // Mock timer display - will be calculated based on startTime
   };
 
-  //handle pause
+  // handlePauseStart
+  const handlePauseStart = () => {
+    const sessionData = getSessionData();
+    if (!sessionData) return;
+
+    const updatedSessionData = updateSessionToPaused(sessionData);
+    localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+  };
+
+  // handlePauseEnd
+  const handlePauseEnd = () => {
+    const sessionData = getSessionData();
+    if (!sessionData) return;
+
+    const updatedSessionData = updateSessionToActive(sessionData);
+    localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+  };
+
+  // handlePause
   const handlePause = () => {
-    setIsPaused(true);
-    //show alert
-    Swal.fire({
-      title: 'Timer Paused',
-      html: `
-        <div class="text-center">
-          <p>Work is currently paused. Click Resume to continue.</p>
-        </div>
-      `,
-      icon: 'info',
-      showCancelButton: false,
-      confirmButtonText: 'Resume',
-      confirmButtonColor: '#ec4899',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showCloseButton: false,
-      customClass: {
-        popup: 'rounded-2xl',
-        confirmButton:
-          'bg-gradient-to-r from-pink-500 to-orange-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200',
-      },
-    }).then((result) => {
+    handlePauseStart();
+
+    // Show pause modal using config
+    Swal.fire(timerPauseConfig).then((result) => {
       if (result.isConfirmed) {
-        setIsPaused(false);
+        handlePauseEnd();
       }
     });
   };
 
-  //handle next
+  // Handle next
   const handleNext = () => {
     console.log('Navigate to Page 3');
     navigate('/login');
   };
 
-  //handle defects change
+  // Handle defects change
   const handleDefectsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDefects(e.target.value);
   };
 
+  // Calculate total paused time
+  const getTotalPausedTime = (): number => {
+    const sessionData = getSessionData();
+    if (!sessionData) return 0;
+    return calculateTotalPausedTime(sessionData.pauseRecords);
+  };
+
   return {
-    isPaused,
+    isPaused: getIsPaused(),
     defects,
     mockData: timerData,
     handlePause,
     handleNext,
     handleDefectsChange,
+    getTotalPausedTime,
   };
 };
