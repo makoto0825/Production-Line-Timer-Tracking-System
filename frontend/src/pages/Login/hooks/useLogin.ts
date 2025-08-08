@@ -16,6 +16,8 @@ interface BuildData {
   updatedAt: string;
 }
 
+const SESSION_LOCKS_API_URL = 'http://localhost:5000/api/session-locks';
+
 export const useLogin = () => {
   const navigate = useNavigate();
   const [loginId, setLoginId] = useState('');
@@ -41,6 +43,38 @@ export const useLogin = () => {
         const result = await Swal.fire(buildInfoConfig);
 
         if (result.isConfirmed) {
+          // Acquire session lock before starting session
+          try {
+            const res = await fetch(`${SESSION_LOCKS_API_URL}/acquire`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ loginId }),
+            });
+
+            if (res.status === 409) {
+              await Swal.fire({
+                icon: 'error',
+                title: 'Session Already Active',
+                text: 'This account is already active on another device/browser.',
+                confirmButtonColor: '#ec4899',
+              });
+              return; // do not proceed
+            }
+
+            if (!res.ok) {
+              throw new Error(`Acquire lock failed: ${res.status}`);
+            }
+          } catch (err) {
+            console.error('Failed to acquire session lock:', err);
+            await Swal.fire({
+              icon: 'error',
+              title: 'Unable to start session',
+              text: 'Please try again later.',
+              confirmButtonColor: '#ec4899',
+            });
+            return; // do not proceed
+          }
+
           // Store start time and save to localStorage with all keys initialized
           const startTime = new Date().toISOString();
           const sessionData = {

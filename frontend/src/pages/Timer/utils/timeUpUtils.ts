@@ -6,6 +6,7 @@ import type { PauseRecord } from './pauseUtils';
 
 // Frontend-only submission endpoint (adjust as needed)
 const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
+const SESSION_LOCKS_API_URL = 'http://localhost:5000/api/session-locks';
 
 // 5 seconds for testing (normally 10 minutes)
 const COUNTDOWN_DURATION = 5; // 5 seconds for testing
@@ -578,6 +579,16 @@ const handleAutoSubmit = async (): Promise<void> => {
         console.warn('Session submission failed with status:', res.status);
       } else {
         console.log('Session submission succeeded');
+        // Best-effort release of session lock after successful auto submit
+        try {
+          await fetch(`${SESSION_LOCKS_API_URL}/release`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ loginId: updatedSession.loginId }),
+          });
+        } catch (e) {
+          console.warn('Failed to release session lock (auto submit):', e);
+        }
       }
     } catch (err) {
       console.warn('Session submission error:', err);
