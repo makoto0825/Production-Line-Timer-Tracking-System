@@ -316,8 +316,8 @@ const calculateRemainingTime = (): number => {
   return Math.max(0, Math.floor(timeLeftMs / 1000));
 };
 
-// Calculate remaining time for display (uses ceil so the first second shows as full second)
-const calculateRemainingTimeForDisplay = (): number => {
+// Calculate remaining time in milliseconds for precise timing
+const calculateRemainingTimeMs = (): number => {
   const currentSessionData = getSessionData();
   if (!currentSessionData?.popupEndTime) {
     return 0;
@@ -325,8 +325,7 @@ const calculateRemainingTimeForDisplay = (): number => {
 
   const popupEnd = new Date(currentSessionData.popupEndTime);
   const now = new Date();
-  const timeLeftMs = popupEnd.getTime() - now.getTime();
-  return Math.max(0, Math.ceil(timeLeftMs / 1000));
+  return Math.max(0, popupEnd.getTime() - now.getTime());
 };
 
 // Handle countdown update
@@ -334,15 +333,15 @@ const handleCountdownUpdate = (
   countdownState: CountdownState,
   onTimeUp: () => void | Promise<void>
 ): void => {
-  const remainingSeconds = calculateRemainingTime(); // logic (floor)
-  const displaySeconds = calculateRemainingTimeForDisplay(); // UI (ceil)
+  const remainingSeconds = calculateRemainingTime();
+  const remainingMs = calculateRemainingTimeMs();
 
-  // Always update display and log countdown (display uses ceil)
-  console.log('Countdown:', formatCountdown(displaySeconds));
-  updateCountdownDisplay(displaySeconds);
+  // Always update display and log countdown
+  console.log('Countdown:', formatCountdown(remainingSeconds));
+  updateCountdownDisplay(remainingSeconds);
 
-  // Check if countdown reached 0
-  if (remainingSeconds <= 0) {
+  // Check if countdown reached 0 using millisecond precision
+  if (remainingMs <= 0) {
     if (countdownState.interval) {
       clearInterval(countdownState.interval);
       countdownState.interval = null;
