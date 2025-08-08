@@ -3,6 +3,11 @@ export interface PauseRecord {
   endTime?: string;
 }
 
+export interface PopupInteraction {
+  type: 'YES' | 'NO' | 'AUTO_SUBMIT';
+  timestamp: string;
+}
+
 export interface SessionData {
   startTime: string;
   pauseRecords: PauseRecord[];
@@ -15,6 +20,17 @@ export interface SessionData {
   status: string;
   totalPausedTime: number;
   defects: number;
+  totalParts: number; // Total parts from Page 3
+  // Popup countdown related properties
+  lastPopupTime?: string;
+  popupEndTime?: string;
+  popupCountdownActive?: boolean;
+  // Popup interactions tracking
+  popupInteractions?: PopupInteraction[];
+  // Next popup scheduling properties
+  nextPopupActiveTime?: number;
+  lastPopupClickTime?: string;
+  isPopupScheduled?: boolean;
 }
 
 // createPauseRecord

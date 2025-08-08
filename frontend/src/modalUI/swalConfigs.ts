@@ -97,3 +97,32 @@ export const timerPauseConfig: SweetAlertOptions = {
       'bg-gradient-to-r from-pink-500 to-orange-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200',
   },
 };
+
+// Time-up popup Swal configuration
+export const timeUpPopupConfig: SweetAlertOptions = {
+  title: 'Time is up!',
+  html: `
+    <div class="text-center space-y-4">
+      <div class="text-2xl font-bold text-red-600 mb-4">
+        <span id="timeUpCountdown">10:00</span>
+      </div>
+      <p class="text-gray-700">Do you wish to continue?</p>
+    </div>
+  `,
+  icon: 'warning',
+  showCancelButton: true,
+  confirmButtonText: 'Yes',
+  cancelButtonText: 'No',
+  confirmButtonColor: '#10b981',
+  cancelButtonColor: '#ef4444',
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+  showCloseButton: false,
+  customClass: {
+    popup: 'rounded-2xl',
+    confirmButton:
+      'bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200',
+    cancelButton:
+      'bg-gradient-to-r from-red-500 to-pink-500 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200',
+  },
+};
