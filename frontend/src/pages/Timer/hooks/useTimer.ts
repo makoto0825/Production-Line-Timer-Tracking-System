@@ -5,7 +5,10 @@ import {
   updateSessionToPaused,
   updateSessionToActive,
 } from '../utils/pauseUtils';
-import { calculateTimeLeft, formatTime } from '../utils/timeUtils';
+import {
+  calculateTimeLeftWithServerTime,
+  formatTime,
+} from '../utils/timeUtils';
 import {
   getSessionData,
   getIsPaused,
@@ -18,6 +21,11 @@ import {
   calculateActiveTime,
 } from '../utils/timeUpUtils';
 import { timerPauseConfig } from '../../../modalUI/swalConfigs';
+import {
+  initSSE,
+  subscribeSSE,
+  getLatestServerTime,
+} from '../utils/serverTimeClient';
 
 export const useTimer = () => {
   const navigate = useNavigate();
@@ -43,7 +51,7 @@ export const useTimer = () => {
     // Restore scheduled popup state on page load
     if (sessionData.isPopupScheduled && sessionData.nextPopupActiveTime) {
       console.log('Restoring scheduled popup state on page load');
-      // The scheduled popup will be checked in the timer interval
+      // The scheduled popup will be checked in the timer update cycle
     }
 
     // Check if popup countdown should be resumed
@@ -63,18 +71,24 @@ export const useTimer = () => {
     }
   }, [navigate]);
 
-  // ===== TIMER LOGIC =====
-  // Real-time timer update with time-up detection
+  // ===== TIMER LOGIC (server time via SSE) =====
   useEffect(() => {
-    const interval = setInterval(() => {
+    // Initialize SSE once
+    initSSE();
+
+    const unsubscribe = subscribeSSE(() => {
       const sessionData = getSessionData();
       if (!sessionData || getIsPaused()) return;
 
-      const timeLeftSeconds = calculateTimeLeft(
+      const serverNow = getLatestServerTime();
+      if (!serverNow) return;
+
+      const timeLeftSeconds = calculateTimeLeftWithServerTime(
         sessionData.buildData.numberOfParts,
         sessionData.buildData.timePerPart,
         sessionData.startTime,
-        sessionData.totalPausedTime
+        sessionData.totalPausedTime,
+        serverNow
       );
 
       setTimeLeft(formatTime(timeLeftSeconds));
@@ -109,9 +123,11 @@ export const useTimer = () => {
         setHasTimeUpPopupShown(true);
         handleTimeUpPopup();
       }
-    }, 1000);
+    });
 
-    return () => clearInterval(interval);
+    return () => {
+      unsubscribe();
+    };
   }, [hasTimeUpPopupShown]);
 
   // ===== PAUSE FUNCTIONALITY =====
