@@ -5,14 +5,20 @@ import { initSSE, subscribeSSE, getLatestServerTime } from './serverTimeClient';
 import type { PauseRecord } from './pauseUtils';
 
 // Frontend-only submission endpoint (adjust as needed)
-const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
-const SESSION_LOCKS_API_URL = 'http://localhost:5000/api/session-locks';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const SESSIONS_API_URL = `${API_BASE_URL}/api/sessions`;
+const SESSION_LOCKS_API_URL = `${API_BASE_URL}/api/session-locks`;
 
-// 5 seconds for testing (normally 10 minutes)
-const COUNTDOWN_DURATION = 5; // 5 seconds for testing
-
-// 5 seconds for testing (normally 10 minutes)
-const POPUP_INTERVAL = 5; // 5 seconds for testing
+// Timer settings from environment variables
+const COUNTDOWN_DURATION = parseInt(
+  import.meta.env.VITE_COUNTDOWN_DURATION || '600',
+  10
+);
+const POPUP_INTERVAL = parseInt(
+  import.meta.env.VITE_POPUP_INTERVAL || '600',
+  10
+);
 
 // Helper: get server "now" (fallback to client time)
 const getServerNow = (): Date => getLatestServerTime() ?? new Date();

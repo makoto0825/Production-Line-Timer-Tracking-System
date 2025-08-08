@@ -6,8 +6,10 @@ import {
 import type { PauseRecord } from '../../Timer/utils/pauseUtils';
 
 // API endpoint for session submission
-const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
-const SESSION_LOCKS_API_URL = 'http://localhost:5000/api/session-locks';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const SESSIONS_API_URL = `${API_BASE_URL}/api/sessions`;
+const SESSION_LOCKS_API_URL = `${API_BASE_URL}/api/session-locks`;
 
 export const useFinalSubmission = () => {
   const [totalParts, setTotalParts] = useState('0');

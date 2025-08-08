@@ -16,7 +16,9 @@ interface BuildData {
   updatedAt: string;
 }
 
-const SESSION_LOCKS_API_URL = 'http://localhost:5000/api/session-locks';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const SESSION_LOCKS_API_URL = `${API_BASE_URL}/api/session-locks`;
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -153,7 +155,7 @@ const fetchBuildData = async (
 ): Promise<BuildData | null> => {
   try {
     const response = await fetch(
-      `http://localhost:5000/api/builds/validate/${buildNumber}`,
+      `${API_BASE_URL}/api/builds/validate/${buildNumber}`,
       {
         method: 'GET',
         headers: {

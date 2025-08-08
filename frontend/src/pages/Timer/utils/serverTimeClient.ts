@@ -20,7 +20,9 @@ let eventSource: EventSource | null = null;
 let latestServerTimeIso: string | null = null;
 const subscribers = new Set<SSECallback>();
 
-const DEFAULT_TIMER_URL = 'http://localhost:5000/api/timer';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const DEFAULT_TIMER_URL = `${API_BASE_URL}/api/timer`;
 
 const isServerTimeMessage = (
   data: SSEMessage

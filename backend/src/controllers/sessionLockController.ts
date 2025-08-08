@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
 import SessionLock from '../models/SessionLock';
 
-const DEFAULT_LOCK_TTL_MINUTES = 120; // 2 hours
+const DEFAULT_LOCK_TTL_MINUTES = parseInt(
+  process.env.DEFAULT_LOCK_TTL_MINUTES || '120',
+  10
+);
 
 const calcExpiresAt = (minutes: number): Date => {
   const d = new Date();
