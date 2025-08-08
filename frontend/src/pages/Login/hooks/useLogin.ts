@@ -50,6 +50,7 @@ export const useLogin = () => {
             status: 'active',
             totalPausedTime: 0,
             defects: 0,
+            totalParts: 0, // Initialize totalParts to 0
           };
 
           // Save to localStorage

@@ -20,6 +20,7 @@ export interface SessionData {
   status: string;
   totalPausedTime: number;
   defects: number;
+  totalParts: number; // Total parts from Page 3
   // Popup countdown related properties
   lastPopupTime?: string;
   popupEndTime?: string;

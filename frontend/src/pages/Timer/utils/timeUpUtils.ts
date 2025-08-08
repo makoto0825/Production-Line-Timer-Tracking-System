@@ -182,18 +182,6 @@ export const calculateActiveTime = (
   return totalTime - totalPausedTime; // Active time only
 };
 
-// Check if popup should be shown based on active time
-const shouldShowPopup = (): boolean => {
-  const sessionData = getSessionData();
-  if (!sessionData) return false;
-
-  const activeTime = calculateActiveTime(
-    sessionData.startTime,
-    sessionData.totalPausedTime
-  );
-  return activeTime >= POPUP_INTERVAL;
-};
-
 // Schedule next popup considering active time
 const scheduleNextPopup = (clickTime: string): void => {
   const sessionData = getSessionData();
@@ -337,34 +325,19 @@ const handleCountdownUpdate = (
 ): void => {
   const remainingSeconds = calculateRemainingTime();
 
-  if (remainingSeconds === 0) {
-    // No popup end time found or countdown finished
-    if (countdownState.interval) {
-      clearInterval(countdownState.interval);
-      countdownState.interval = null;
-    }
-    return;
-  }
-
+  // Always update display and log countdown
   console.log('Countdown:', formatCountdown(remainingSeconds));
   updateCountdownDisplay(remainingSeconds);
 
   // Check if countdown reached 0
-  const currentSessionData = getSessionData();
-  if (currentSessionData?.popupEndTime) {
-    const popupEnd = new Date(currentSessionData.popupEndTime);
-    const now = new Date();
-    const timeLeftMs = popupEnd.getTime() - now.getTime();
-
-    if (timeLeftMs <= 0) {
-      if (countdownState.interval) {
-        clearInterval(countdownState.interval);
-        countdownState.interval = null;
-      }
-      console.log('Countdown finished - auto-submitting session');
-      onTimeUp();
-      Swal.close();
+  if (remainingSeconds <= 0) {
+    if (countdownState.interval) {
+      clearInterval(countdownState.interval);
+      countdownState.interval = null;
     }
+    console.log('Countdown finished - auto-submitting session');
+    onTimeUp();
+    Swal.close();
   }
 };
 
@@ -428,11 +401,47 @@ const handleAutoSubmit = () => {
   // Record auto-submit interaction
   recordPopupInteraction('AUTO_SUBMIT');
 
-  // TODO: Collect session data for submission
-  // const sessionData = collectSessionDataForSubmission();
-  // if (sessionData) {
-  //   console.log('Session data collected:', sessionData);
-  // }
+  // Collect and log session data for submission
+  const sessionData = getSessionData();
+  if (sessionData) {
+    console.log('=== SESSION DATA FOR SUBMISSION ===');
+    console.log('Login ID:', sessionData.loginId);
+    console.log('Build Number:', sessionData.buildData.buildNumber);
+    console.log('Number of Parts:', sessionData.buildData.numberOfParts);
+    console.log('Time Per Part:', sessionData.buildData.timePerPart);
+    console.log('Start Time:', sessionData.startTime);
+    console.log('Total Paused Time:', sessionData.totalPausedTime);
+    console.log('Defects:', sessionData.defects);
+    console.log('Total Parts:', sessionData.totalParts);
+    console.log('Status:', sessionData.status);
+    console.log('Pause Records:', sessionData.pauseRecords);
+    console.log('Popup Interactions:', sessionData.popupInteractions);
+    console.log('Last Popup Time:', sessionData.lastPopupTime);
+    console.log('Popup End Time:', sessionData.popupEndTime);
+    console.log('Popup Countdown Active:', sessionData.popupCountdownActive);
+    console.log('Next Popup Active Time:', sessionData.nextPopupActiveTime);
+    console.log('Last Popup Click Time:', sessionData.lastPopupClickTime);
+    console.log('Is Popup Scheduled:', sessionData.isPopupScheduled);
+
+    // Calculate additional session metrics
+    const endTime = new Date().toISOString();
+    const totalSessionTime =
+      (new Date(endTime).getTime() -
+        new Date(sessionData.startTime).getTime()) /
+      1000;
+    const totalActiveTime = totalSessionTime - sessionData.totalPausedTime;
+    const totalInactiveTime = sessionData.totalPausedTime;
+
+    console.log('=== CALCULATED METRICS ===');
+    console.log('End Time:', endTime);
+    console.log('Total Session Time (seconds):', totalSessionTime);
+    console.log('Total Active Time (seconds):', totalActiveTime);
+    console.log('Total Inactive Time (seconds):', totalInactiveTime);
+    console.log('Submission Type: AUTO_SUBMIT');
+    console.log('================================');
+  } else {
+    console.warn('No session data found for submission');
+  }
 
   // Clear session data
   localStorage.removeItem('sessionData');
