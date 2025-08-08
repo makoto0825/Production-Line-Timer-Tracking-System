@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import Card from './commonComponents/Card';
-import Button from './commonComponents/Button';
-import InfoGrid from './commonComponents/InfoGrid';
+import Card from '../../commonComponents/Card';
+import Button from '../../commonComponents/Button';
+import InfoGrid from '../../commonComponents/InfoGrid';
 import { useTimer } from './hooks/useTimer';
 
 const Timer = () => {

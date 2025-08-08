@@ -148,8 +148,8 @@ export const useTimer = () => {
   // ===== NAVIGATION =====
   // Handle next page navigation
   const handleNext = () => {
-    console.log('Navigate to Page 3');
-    navigate('/login'); // TODO: Change to actual Page 3 route when implemented
+    console.log('Navigate to Final Submission');
+    navigate('/final');
   };
 
   // ===== USER INPUT HANDLERS =====
