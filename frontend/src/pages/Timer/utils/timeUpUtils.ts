@@ -2,8 +2,11 @@ import Swal from 'sweetalert2';
 import { timeUpPopupConfig } from '../../../modalUI/swalConfigs';
 import { getSessionData } from './sessionUtils';
 
-// 10 minutes in seconds
-const COUNTDOWN_DURATION = 10 * 60; // 10 minutes
+// 30 seconds for testing (normally 10 minutes)
+const COUNTDOWN_DURATION = 30; // 30 seconds for testing
+
+// 30 seconds for testing (normally 10 minutes)
+const POPUP_INTERVAL = 30; // 30 seconds for testing
 
 // Types for better type safety
 interface PopupTimeData {
@@ -80,6 +83,30 @@ export const checkPopupCountdownOnLoad = () => {
   }
 };
 
+// Check if scheduled popup should be shown (considering pause time)
+export const checkScheduledPopup = (): boolean => {
+  const sessionData = getSessionData();
+  if (!sessionData?.isPopupScheduled || !sessionData?.nextPopupActiveTime) {
+    return false;
+  }
+
+  const currentActiveTime = calculateActiveTime(
+    sessionData.startTime,
+    sessionData.totalPausedTime
+  );
+  const shouldShow = currentActiveTime >= sessionData.nextPopupActiveTime;
+
+  if (shouldShow) {
+    console.log('Scheduled popup time reached, showing popup...');
+    // Reset schedule and show popup
+    resetPopupSchedule();
+    handleTimeUpPopup();
+    return true;
+  }
+
+  return false;
+};
+
 // Resume existing countdown without creating new popup
 const resumeExistingCountdown = async () => {
   console.log('Resuming existing countdown...');
@@ -113,6 +140,75 @@ export const scheduleNextTimeUpPopup = () => {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+// Calculate active time (excluding pause time)
+const calculateActiveTime = (
+  startTime: string,
+  totalPausedTime: number
+): number => {
+  const now = new Date().getTime();
+  const start = new Date(startTime).getTime();
+  const totalTime = (now - start) / 1000; // Convert to seconds
+  return totalTime - totalPausedTime; // Active time only
+};
+
+// Check if popup should be shown based on active time
+const shouldShowPopup = (): boolean => {
+  const sessionData = getSessionData();
+  if (!sessionData) return false;
+
+  const activeTime = calculateActiveTime(
+    sessionData.startTime,
+    sessionData.totalPausedTime
+  );
+  return activeTime >= POPUP_INTERVAL;
+};
+
+// Schedule next popup considering active time
+const scheduleNextPopup = (clickTime: string): void => {
+  const sessionData = getSessionData();
+  if (!sessionData) {
+    console.warn('No session data found, cannot schedule next popup');
+    return;
+  }
+
+  // Calculate current active time at click
+  const currentActiveTime = calculateActiveTime(
+    sessionData.startTime,
+    sessionData.totalPausedTime
+  );
+
+  // Schedule next popup at current active time + interval
+  const nextPopupActiveTime = currentActiveTime + POPUP_INTERVAL;
+
+  const updatedSessionData = {
+    ...sessionData,
+    nextPopupActiveTime,
+    lastPopupClickTime: clickTime,
+    isPopupScheduled: true,
+  };
+
+  localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+  console.log(
+    `Scheduled next popup at active time: ${nextPopupActiveTime} seconds`
+  );
+};
+
+// Reset popup schedule
+const resetPopupSchedule = (): void => {
+  const sessionData = getSessionData();
+  if (!sessionData) return;
+
+  const updatedSessionData = {
+    ...sessionData,
+    nextPopupActiveTime: undefined,
+    lastPopupClickTime: undefined,
+    isPopupScheduled: false,
+  };
+
+  localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+  console.log('Reset popup schedule');
+};
 
 // Record popup interaction
 const recordPopupInteraction = (type: PopupInteraction['type']): void => {
@@ -277,16 +373,16 @@ const handleUserInteraction = (result: {
   isConfirmed: boolean;
   dismiss?: Swal.DismissReason;
 }): void => {
+  const clickTime = new Date().toISOString();
+
   if (result.isConfirmed) {
     console.log('User clicked Yes - continue work');
     recordPopupInteraction('YES');
-    // TODO: Schedule next popup in 10 minutes
-    // scheduleNextTimeUpPopup();
+    scheduleNextPopup(clickTime);
   } else if (result.dismiss === Swal.DismissReason.cancel) {
     console.log('User clicked No - continue work');
     recordPopupInteraction('NO');
-    // TODO: Schedule next popup in 10 minutes
-    // scheduleNextTimeUpPopup();
+    scheduleNextPopup(clickTime);
   }
 };
 

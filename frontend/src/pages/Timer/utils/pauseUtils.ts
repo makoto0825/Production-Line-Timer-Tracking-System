@@ -26,6 +26,10 @@ export interface SessionData {
   popupCountdownActive?: boolean;
   // Popup interactions tracking
   popupInteractions?: PopupInteraction[];
+  // Next popup scheduling properties
+  nextPopupActiveTime?: number;
+  lastPopupClickTime?: string;
+  isPopupScheduled?: boolean;
 }
 
 // createPauseRecord

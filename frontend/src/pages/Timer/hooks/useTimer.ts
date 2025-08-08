@@ -14,6 +14,7 @@ import {
 import {
   handleTimeUpPopup,
   checkPopupCountdownOnLoad,
+  checkScheduledPopup,
 } from '../utils/timeUpUtils';
 import { timerPauseConfig } from '../../../modalUI/swalConfigs';
 
@@ -67,6 +68,13 @@ export const useTimer = () => {
       );
 
       setTimeLeft(formatTime(timeLeftSeconds));
+
+      // Check for scheduled popup (considering pause time)
+      if (checkScheduledPopup()) {
+        console.log('Scheduled popup triggered');
+        setHasTimeUpPopupShown(true);
+        return;
+      }
 
       // Time-up detection: when timeLeft becomes 0 or negative
       if (timeLeftSeconds <= 0 && !hasTimeUpPopupShown) {
