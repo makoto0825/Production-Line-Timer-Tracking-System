@@ -37,6 +37,9 @@ export const useTimer = () => {
       return;
     }
 
+    // Restore defects value from session data
+    setDefects(sessionData.defects?.toString() || '0');
+
     // Restore scheduled popup state on page load
     if (sessionData.isPopupScheduled && sessionData.nextPopupActiveTime) {
       console.log('Restoring scheduled popup state on page load');
@@ -152,7 +155,22 @@ export const useTimer = () => {
   // ===== USER INPUT HANDLERS =====
   // Handle defects input change
   const handleDefectsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDefects(e.target.value);
+    const newDefectsValue = e.target.value;
+    setDefects(newDefectsValue);
+
+    // Update session data with new defects value
+    const sessionData = getSessionData();
+    if (sessionData) {
+      const updatedSessionData = {
+        ...sessionData,
+        defects: parseInt(newDefectsValue) || 0,
+      };
+      localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
+      console.log(
+        'Updated defects in session data:',
+        updatedSessionData.defects
+      );
+    }
   };
 
   // Generate timer display data
