@@ -2,6 +2,7 @@ import Swal from 'sweetalert2';
 import { timeUpPopupConfig } from '../../../modalUI/swalConfigs';
 import { getSessionData } from './sessionUtils';
 import { initSSE, subscribeSSE, getLatestServerTime } from './serverTimeClient';
+import type { PauseRecord } from './pauseUtils';
 
 // Frontend-only submission endpoint (adjust as needed)
 const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
@@ -549,7 +550,14 @@ const handleAutoSubmit = async (): Promise<void> => {
       totalPausedTime: updatedSession.totalPausedTime,
       defects: updatedSession.defects,
       totalParts: updatedSession.totalParts,
-      pauseRecords: updatedSession.pauseRecords,
+      pauseRecords: Array.isArray(updatedSession.pauseRecords)
+        ? (updatedSession.pauseRecords as PauseRecord[]).map(
+            (r: PauseRecord) => ({
+              start: r.startTime,
+              end: r.endTime,
+            })
+          )
+        : [],
       popupInteractions: updatedSession.popupInteractions,
       submissionType: 'AUTO_SUBMIT',
       endTime: endTimeIso,
