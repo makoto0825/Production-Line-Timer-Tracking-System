@@ -514,6 +514,7 @@ const handleAutoSubmit = async (): Promise<void> => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      console.log('Session submission response:', res);
       if (!res.ok) {
         console.warn('Session submission failed with status:', res.status);
       } else {
