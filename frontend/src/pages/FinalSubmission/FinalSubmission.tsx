@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../commonComponents/Card';
 import Button from '../../commonComponents/Button';
 import { useFinalSubmission } from './hooks/useFinalSubmission';
 
 const FinalSubmission = () => {
   const { totalParts, handleTotalPartsChange } = useFinalSubmission();
+  const navigate = useNavigate();
 
   return (
     <div className='min-h-screen bg-gradient-to-br via-blue-50 to-indigo-100 from-slate-50'>
@@ -50,7 +52,7 @@ const FinalSubmission = () => {
             title='Actions'
             content={
               <div className='flex gap-4 justify-center'>
-                <Button variant='secondary' disabled>
+                <Button variant='secondary' onClick={() => navigate('/timer')}>
                   Back
                 </Button>
                 <Button variant='success' disabled>
