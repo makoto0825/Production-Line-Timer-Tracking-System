@@ -2,6 +2,9 @@ import Swal from 'sweetalert2';
 import { timeUpPopupConfig } from '../../../modalUI/swalConfigs';
 import { getSessionData } from './sessionUtils';
 
+// Frontend-only submission endpoint (adjust as needed)
+const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
+
 // 5 seconds for testing (normally 10 minutes)
 const COUNTDOWN_DURATION = 5; // 5 seconds for testing
 
@@ -316,7 +319,7 @@ const calculateRemainingTime = (): number => {
 // Handle countdown update
 const handleCountdownUpdate = (
   countdownState: CountdownState,
-  onTimeUp: () => void
+  onTimeUp: () => void | Promise<void>
 ): void => {
   const remainingSeconds = calculateRemainingTime();
 
@@ -339,7 +342,7 @@ const handleCountdownUpdate = (
 // Setup countdown functionality
 const setupCountdown = (
   countdownState: CountdownState,
-  onTimeUp: () => void
+  onTimeUp: () => void | Promise<void>
 ): void => {
   console.log('Popup opened, starting countdown...');
 
@@ -450,7 +453,7 @@ const handleUserInteraction = (result: {
 };
 
 // Handle auto-submit when countdown reaches 0
-const handleAutoSubmit = () => {
+const handleAutoSubmit = async (): Promise<void> => {
   console.log('Auto-submitting session data...');
 
   // Record auto-submit interaction
@@ -459,25 +462,6 @@ const handleAutoSubmit = () => {
   // Collect and log session data for submission (placeholder)
   const sessionData = getSessionData();
   if (sessionData) {
-    console.log('=== SESSION DATA FOR SUBMISSION (AUTO_SUBMIT) ===');
-    console.log('Login ID:', sessionData.loginId);
-    console.log('Build Number:', sessionData.buildData.buildNumber);
-    console.log('Number of Parts:', sessionData.buildData.numberOfParts);
-    console.log('Time Per Part:', sessionData.buildData.timePerPart);
-    console.log('Start Time:', sessionData.startTime);
-    console.log('Total Paused Time:', sessionData.totalPausedTime);
-    console.log('Defects:', sessionData.defects);
-    console.log('Total Parts:', sessionData.totalParts);
-    console.log('Status:', sessionData.status);
-    console.log('Pause Records:', sessionData.pauseRecords);
-    console.log('Popup Interactions:', sessionData.popupInteractions);
-    console.log('Last Popup Time:', sessionData.lastPopupTime);
-    console.log('Popup End Time:', sessionData.popupEndTime);
-    console.log('Popup Countdown Active:', sessionData.popupCountdownActive);
-    console.log('Next Popup Active Time:', sessionData.nextPopupActiveTime);
-    console.log('Last Popup Click Time:', sessionData.lastPopupClickTime);
-    console.log('Is Popup Scheduled:', sessionData.isPopupScheduled);
-
     // Compute and persist total active/inactive times (keep decimals)
     const endTimeIso = new Date().toISOString();
     const totalSessionTimeSec =
@@ -504,11 +488,40 @@ const handleAutoSubmit = () => {
     };
     localStorage.setItem('sessionData', JSON.stringify(updatedSession));
 
-    console.log('End Time:', endTimeIso);
-    console.log('Total-Active-time (sec):', totalActiveTimeSec);
-    console.log('Total-inactive-time (sec):', totalInactiveTimeSec);
-    console.log('Popup-wait-accum (sec):', popupWaitAccumSec);
-    console.log('===============================================');
+    // Build submission payload
+    const payload = {
+      loginId: updatedSession.loginId,
+      buildNumber: updatedSession.buildData?.buildNumber,
+      numberOfParts: updatedSession.buildData?.numberOfParts,
+      timePerPart: updatedSession.buildData?.timePerPart,
+      startTime: updatedSession.startTime,
+      totalPausedTime: updatedSession.totalPausedTime,
+      defects: updatedSession.defects,
+      totalParts: updatedSession.totalParts,
+      pauseRecords: updatedSession.pauseRecords,
+      popupInteractions: updatedSession.popupInteractions,
+      submissionType: 'AUTO_SUBMIT',
+      endTime: endTimeIso,
+      totalActiveTimeSec,
+      totalInactiveTimeSec,
+      popupWaitAccumSec,
+    };
+
+    // Await POST to backend API (frontend only for now)
+    try {
+      const res = await fetch(SESSIONS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        console.warn('Session submission failed with status:', res.status);
+      } else {
+        console.log('Session submission succeeded');
+      }
+    } catch (err) {
+      console.warn('Session submission error:', err);
+    }
   }
 
   // Clear session data and redirect to login (simulate submission complete)
