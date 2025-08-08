@@ -1,0 +1,5 @@
+[33m597ee6b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m)[m ✨ Feat: create auto-submit basic feature
+[33ma9d9d77[m ✨ Fix: respect scheduled popup grace period when main timer is negative
+[33ma896824[m ✨ Feat: implement pause-aware popup scheduling with 30-second intervals
+[33m4f8b7dc[m 🐛 Fix: resume existing popup countdown on page refresh
+[33m074d6d2[m ✨ Feat: add popup interactions tracking to session data

@@ -2,11 +2,11 @@ import Swal from 'sweetalert2';
 import { timeUpPopupConfig } from '../../../modalUI/swalConfigs';
 import { getSessionData } from './sessionUtils';
 
-// 30 seconds for testing (normally 10 minutes)
-const COUNTDOWN_DURATION = 30; // 30 seconds for testing
+// 5 seconds for testing (normally 10 minutes)
+const COUNTDOWN_DURATION = 30; // 5 seconds for testing
 
-// 30 seconds for testing (normally 10 minutes)
-const POPUP_INTERVAL = 30; // 30 seconds for testing
+// 5 seconds for testing (normally 10 minutes)
+const POPUP_INTERVAL = 30; // 5 seconds for testing
 
 // Types for better type safety
 interface PopupTimeData {
@@ -124,15 +124,10 @@ const validateScheduledPopup = (): boolean => {
     sessionData.totalPausedTime
   );
 
-  // If scheduled time has already passed, reset the schedule
-  if (currentActiveTime > sessionData.nextPopupActiveTime) {
-    console.log('Scheduled popup time has passed, resetting schedule');
-    resetPopupSchedule();
-    return false;
-  }
-
+  // Allow popup even if the scheduled time has already passed slightly
+  // to avoid missing the popup due to timer drift.
   console.log(
-    `Scheduled popup is valid. Current: ${currentActiveTime}s, Scheduled: ${sessionData.nextPopupActiveTime}s`
+    `Scheduled popup check. Current: ${currentActiveTime}s, Scheduled: ${sessionData.nextPopupActiveTime}s`
   );
   return true;
 };
@@ -401,10 +396,10 @@ const handleAutoSubmit = () => {
   // Record auto-submit interaction
   recordPopupInteraction('AUTO_SUBMIT');
 
-  // Collect and log session data for submission
+  // Collect and log session data for submission (placeholder)
   const sessionData = getSessionData();
   if (sessionData) {
-    console.log('=== SESSION DATA FOR SUBMISSION ===');
+    console.log('=== SESSION DATA FOR SUBMISSION (AUTO_SUBMIT) ===');
     console.log('Login ID:', sessionData.loginId);
     console.log('Build Number:', sessionData.buildData.buildNumber);
     console.log('Number of Parts:', sessionData.buildData.numberOfParts);
@@ -422,31 +417,12 @@ const handleAutoSubmit = () => {
     console.log('Next Popup Active Time:', sessionData.nextPopupActiveTime);
     console.log('Last Popup Click Time:', sessionData.lastPopupClickTime);
     console.log('Is Popup Scheduled:', sessionData.isPopupScheduled);
-
-    // Calculate additional session metrics
-    const endTime = new Date().toISOString();
-    const totalSessionTime =
-      (new Date(endTime).getTime() -
-        new Date(sessionData.startTime).getTime()) /
-      1000;
-    const totalActiveTime = totalSessionTime - sessionData.totalPausedTime;
-    const totalInactiveTime = sessionData.totalPausedTime;
-
-    console.log('=== CALCULATED METRICS ===');
-    console.log('End Time:', endTime);
-    console.log('Total Session Time (seconds):', totalSessionTime);
-    console.log('Total Active Time (seconds):', totalActiveTime);
-    console.log('Total Inactive Time (seconds):', totalInactiveTime);
-    console.log('Submission Type: AUTO_SUBMIT');
-    console.log('================================');
-  } else {
-    console.warn('No session data found for submission');
+    console.log('===============================================');
   }
 
-  // Clear session data
+  // Clear session data and redirect to login (simulate submission complete)
   localStorage.removeItem('sessionData');
 
-  // Show auto-submit notification
   Swal.fire({
     title: 'Session Auto-Submitted',
     text: 'Session has been automatically submitted due to inactivity.',
@@ -454,7 +430,6 @@ const handleAutoSubmit = () => {
     confirmButtonText: 'OK',
     confirmButtonColor: '#ec4899',
   }).then(() => {
-    // Redirect to login page
     window.location.href = '/login';
   });
 };
