@@ -90,6 +90,11 @@ export const checkScheduledPopup = (): boolean => {
     return false;
   }
 
+  // Validate and restore scheduled popup state
+  if (!validateScheduledPopup()) {
+    return false;
+  }
+
   const currentActiveTime = calculateActiveTime(
     sessionData.startTime,
     sessionData.totalPausedTime
@@ -105,6 +110,31 @@ export const checkScheduledPopup = (): boolean => {
   }
 
   return false;
+};
+
+// Validate and restore scheduled popup state
+const validateScheduledPopup = (): boolean => {
+  const sessionData = getSessionData();
+  if (!sessionData?.isPopupScheduled || !sessionData?.nextPopupActiveTime) {
+    return false;
+  }
+
+  const currentActiveTime = calculateActiveTime(
+    sessionData.startTime,
+    sessionData.totalPausedTime
+  );
+
+  // If scheduled time has already passed, reset the schedule
+  if (currentActiveTime > sessionData.nextPopupActiveTime) {
+    console.log('Scheduled popup time has passed, resetting schedule');
+    resetPopupSchedule();
+    return false;
+  }
+
+  console.log(
+    `Scheduled popup is valid. Current: ${currentActiveTime}s, Scheduled: ${sessionData.nextPopupActiveTime}s`
+  );
+  return true;
 };
 
 // Resume existing countdown without creating new popup
@@ -142,7 +172,7 @@ export const scheduleNextTimeUpPopup = () => {
 // ============================================================================
 
 // Calculate active time (excluding pause time)
-const calculateActiveTime = (
+export const calculateActiveTime = (
   startTime: string,
   totalPausedTime: number
 ): number => {
@@ -190,8 +220,13 @@ const scheduleNextPopup = (clickTime: string): void => {
 
   localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
   console.log(
-    `Scheduled next popup at active time: ${nextPopupActiveTime} seconds`
+    `Scheduled next popup at active time: ${nextPopupActiveTime} seconds (current: ${currentActiveTime}s)`
   );
+  console.log('Scheduled popup data saved:', {
+    nextPopupActiveTime,
+    lastPopupClickTime: clickTime,
+    isPopupScheduled: true,
+  });
 };
 
 // Reset popup schedule

@@ -15,6 +15,7 @@ import {
   handleTimeUpPopup,
   checkPopupCountdownOnLoad,
   checkScheduledPopup,
+  calculateActiveTime,
 } from '../utils/timeUpUtils';
 import { timerPauseConfig } from '../../../modalUI/swalConfigs';
 
@@ -34,6 +35,12 @@ export const useTimer = () => {
       console.log('No session data found, redirecting to login');
       navigate('/login');
       return;
+    }
+
+    // Restore scheduled popup state on page load
+    if (sessionData.isPopupScheduled && sessionData.nextPopupActiveTime) {
+      console.log('Restoring scheduled popup state on page load');
+      // The scheduled popup will be checked in the timer interval
     }
 
     // Check if popup countdown should be resumed
@@ -77,7 +84,24 @@ export const useTimer = () => {
       }
 
       // Time-up detection: when timeLeft becomes 0 or negative
+      // But respect scheduled popup grace period
       if (timeLeftSeconds <= 0 && !hasTimeUpPopupShown) {
+        // Check if there's a scheduled popup with grace period
+        if (sessionData.isPopupScheduled && sessionData.nextPopupActiveTime) {
+          const currentActiveTime = calculateActiveTime(
+            sessionData.startTime,
+            sessionData.totalPausedTime
+          );
+
+          // If we're still within the grace period, don't show popup
+          if (currentActiveTime < sessionData.nextPopupActiveTime) {
+            console.log(
+              `Main timer is negative but within grace period. Current: ${currentActiveTime}s, Scheduled: ${sessionData.nextPopupActiveTime}s`
+            );
+            return;
+          }
+        }
+
         console.log('Time is up! Triggering popup...');
         setHasTimeUpPopupShown(true);
         handleTimeUpPopup();
