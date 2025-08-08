@@ -5,13 +5,13 @@ import { IBuild } from '../types';
 const buildData: Partial<IBuild>[] = [
   {
     buildNumber: 'B00001',
-    numberOfParts: 3,
+    numberOfParts: 1,
     timePerPart: 1,
   },
   {
     buildNumber: 'B00002',
-    numberOfParts: 30,
-    timePerPart: 1.5,
+    numberOfParts: 1,
+    timePerPart: 0.2,
   },
   {
     buildNumber: 'B00003',

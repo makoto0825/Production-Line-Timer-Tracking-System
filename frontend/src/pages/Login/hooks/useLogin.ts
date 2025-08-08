@@ -41,7 +41,7 @@ export const useLogin = () => {
         const result = await Swal.fire(buildInfoConfig);
 
         if (result.isConfirmed) {
-          // Store start time and save to localStorage
+          // Store start time and save to localStorage with all keys initialized
           const startTime = new Date().toISOString();
           const sessionData = {
             loginId,
@@ -50,7 +50,25 @@ export const useLogin = () => {
             status: 'active',
             totalPausedTime: 0,
             defects: 0,
-            totalParts: 0, // Initialize totalParts to 0
+            totalParts: 0,
+            // Popup countdown related properties
+            lastPopupTime: undefined,
+            popupEndTime: undefined,
+            popupCountdownActive: false,
+            // Popup interactions tracking
+            popupInteractions: [],
+            // Next popup scheduling properties
+            nextPopupActiveTime: undefined,
+            lastPopupClickTime: undefined,
+            isPopupScheduled: false,
+            // Pause records
+            pauseRecords: [],
+            // Time calculation properties (for submission)
+            totalActiveTimeSec: undefined,
+            totalInactiveTimeSec: undefined,
+            popupWaitAccumSec: 0,
+            endTime: undefined,
+            submissionType: undefined,
           };
 
           // Save to localStorage

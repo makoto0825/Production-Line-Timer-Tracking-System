@@ -5,7 +5,8 @@ import Button from '../../commonComponents/Button';
 import { useFinalSubmission } from './hooks/useFinalSubmission';
 
 const FinalSubmission = () => {
-  const { totalParts, handleTotalPartsChange } = useFinalSubmission();
+  const { totalParts, handleTotalPartsChange, handleSubmit, isSubmitting } =
+    useFinalSubmission();
   const navigate = useNavigate();
 
   return (
@@ -41,6 +42,7 @@ const FinalSubmission = () => {
                     placeholder='0'
                     min='0'
                     className='px-4 py-3 w-full rounded-lg border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent'
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -52,11 +54,19 @@ const FinalSubmission = () => {
             title='Actions'
             content={
               <div className='flex gap-4 justify-center'>
-                <Button variant='secondary' onClick={() => navigate('/timer')}>
+                <Button
+                  variant='secondary'
+                  onClick={() => navigate('/timer')}
+                  disabled={isSubmitting}
+                >
                   Back
                 </Button>
-                <Button variant='success' disabled>
-                  Submit
+                <Button
+                  variant='success'
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </Button>
               </div>
             }
