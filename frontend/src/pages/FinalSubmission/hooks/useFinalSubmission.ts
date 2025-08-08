@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react';
+import {
+  initSSE,
+  getLatestServerTime,
+} from '../../Timer/utils/serverTimeClient';
+import type { PauseRecord } from '../../Timer/utils/pauseUtils';
 
 // API endpoint for session submission
 const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
@@ -6,6 +11,11 @@ const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
 export const useFinalSubmission = () => {
   const [totalParts, setTotalParts] = useState('0');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize SSE to ensure server time is available
+  useEffect(() => {
+    initSSE();
+  }, []);
 
   // Load totalParts from session data on component mount
   useEffect(() => {
@@ -63,12 +73,11 @@ export const useFinalSubmission = () => {
 
       const parsed = JSON.parse(sessionData);
 
-      // Calculate session times
-      const endTimeIso = new Date().toISOString();
+      // Calculate session times using server time
+      const serverNow = getLatestServerTime() ?? new Date();
+      const endTimeIso = serverNow.toISOString();
       const totalSessionTimeSec =
-        (new Date(endTimeIso).getTime() -
-          new Date(parsed.startTime).getTime()) /
-        1000;
+        (serverNow.getTime() - new Date(parsed.startTime).getTime()) / 1000;
       const popupWaitAccumSec = parsed.popupWaitAccumSec || 0;
       const totalInactiveTimeSec =
         (parsed.totalPausedTime || 0) + popupWaitAccumSec;
@@ -76,6 +85,14 @@ export const useFinalSubmission = () => {
         0,
         totalSessionTimeSec - totalInactiveTimeSec
       );
+
+      // Map pauseRecords to { start, end }
+      const pauseRecordsForApi = Array.isArray(parsed.pauseRecords)
+        ? (parsed.pauseRecords as PauseRecord[]).map((r: PauseRecord) => ({
+            start: r.startTime,
+            end: r.endTime,
+          }))
+        : [];
 
       // Build submission payload
       const payload = {
@@ -87,7 +104,7 @@ export const useFinalSubmission = () => {
         totalPausedTime: parsed.totalPausedTime,
         defects: parsed.defects,
         totalParts: parsed.totalParts,
-        pauseRecords: parsed.pauseRecords,
+        pauseRecords: pauseRecordsForApi,
         popupInteractions: parsed.popupInteractions,
         submissionType: 'MANUAL',
         endTime: endTimeIso,

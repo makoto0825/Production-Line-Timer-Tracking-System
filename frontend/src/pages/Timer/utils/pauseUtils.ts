@@ -1,3 +1,5 @@
+import { getLatestServerTime } from './serverTimeClient';
+
 export interface PauseRecord {
   startTime: string;
   endTime?: string;
@@ -33,10 +35,14 @@ export interface SessionData {
   isPopupScheduled?: boolean;
 }
 
+const nowIso = (): string =>
+  (getLatestServerTime() ?? new Date()).toISOString();
+const nowDate = (): Date => getLatestServerTime() ?? new Date();
+
 // createPauseRecord
 export const createPauseRecord = (): PauseRecord => {
   return {
-    startTime: new Date().toISOString(),
+    startTime: nowIso(),
     endTime: undefined,
   };
 };
@@ -58,7 +64,7 @@ export const updatePauseRecord = (
     if (index === pauseRecords.length - 1 && !record.endTime) {
       const updatedRecord = {
         ...record,
-        endTime: new Date().toISOString(),
+        endTime: nowIso(),
       };
       console.log(`Updating record ${index}:`, updatedRecord);
       return updatedRecord;
@@ -76,7 +82,7 @@ export const calculateTotalPausedTime = (
   if (!pauseRecords || !Array.isArray(pauseRecords)) return 0;
 
   return pauseRecords.reduce((total, pause) => {
-    const endTime = pause.endTime ? new Date(pause.endTime) : new Date();
+    const endTime = pause.endTime ? new Date(pause.endTime) : nowDate();
     const duration =
       (endTime.getTime() - new Date(pause.startTime).getTime()) / 1000; // 秒単位
     return total + duration;

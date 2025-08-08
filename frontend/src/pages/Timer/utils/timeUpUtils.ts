@@ -1,6 +1,8 @@
 import Swal from 'sweetalert2';
 import { timeUpPopupConfig } from '../../../modalUI/swalConfigs';
 import { getSessionData } from './sessionUtils';
+import { initSSE, subscribeSSE, getLatestServerTime } from './serverTimeClient';
+import type { PauseRecord } from './pauseUtils';
 
 // Frontend-only submission endpoint (adjust as needed)
 const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
@@ -11,6 +13,9 @@ const COUNTDOWN_DURATION = 5; // 5 seconds for testing
 // 5 seconds for testing (normally 10 minutes)
 const POPUP_INTERVAL = 5; // 5 seconds for testing
 
+// Helper: get server "now" (fallback to client time)
+const getServerNow = (): Date => getLatestServerTime() ?? new Date();
+
 // Types for better type safety
 interface PopupTimeData {
   popupStartTime: string;
@@ -20,6 +25,7 @@ interface PopupTimeData {
 interface CountdownState {
   interval: NodeJS.Timeout | null;
   isActive: boolean;
+  unsubscribe: (() => void) | null;
 }
 
 interface PopupInteraction {
@@ -32,6 +38,9 @@ export const handleTimeUpPopup = async () => {
   console.log('Showing time-up popup with countdown...');
 
   try {
+    // Ensure SSE is initialized (idempotent)
+    initSSE();
+
     // Calculate popup timing
     const popupData = calculatePopupTiming();
 
@@ -42,6 +51,7 @@ export const handleTimeUpPopup = async () => {
     const countdownState: CountdownState = {
       interval: null,
       isActive: true,
+      unsubscribe: null,
     };
 
     // Create custom popup with countdown
@@ -69,7 +79,7 @@ export const checkPopupCountdownOnLoad = () => {
   }
 
   const popupEnd = new Date(sessionData.popupEndTime);
-  const now = new Date();
+  const now = getServerNow();
   const timeLeftMs = popupEnd.getTime() - now.getTime();
 
   // If countdown is still active, return true to indicate popup should be shown
@@ -139,10 +149,14 @@ const validateScheduledPopup = (): boolean => {
 const resumeExistingCountdown = async () => {
   console.log('Resuming existing countdown...');
 
+  // Ensure SSE is initialized (idempotent)
+  initSSE();
+
   // Initialize countdown state
   const countdownState: CountdownState = {
     interval: null,
     isActive: true,
+    unsubscribe: null,
   };
 
   // Create popup with existing countdown
@@ -169,12 +183,12 @@ export const scheduleNextTimeUpPopup = () => {
 // HELPER FUNCTIONS
 // ============================================================================
 
-// Calculate active time (excluding pause time)
+// Calculate active time (excluding pause time) using server now
 export const calculateActiveTime = (
   startTime: string,
   totalPausedTime: number
 ): number => {
-  const now = new Date().getTime();
+  const now = getServerNow().getTime();
   const start = new Date(startTime).getTime();
   const totalTime = (now - start) / 1000; // Convert to seconds
   return totalTime - totalPausedTime; // Active time only
@@ -231,7 +245,7 @@ const resetPopupSchedule = (): void => {
   console.log('Reset popup schedule');
 };
 
-// Record popup interaction
+// Record popup interaction (use server time)
 const recordPopupInteraction = (type: PopupInteraction['type']): void => {
   const sessionData = getSessionData();
   if (!sessionData) {
@@ -241,7 +255,7 @@ const recordPopupInteraction = (type: PopupInteraction['type']): void => {
 
   const interaction: PopupInteraction = {
     type,
-    timestamp: new Date().toISOString(),
+    timestamp: getServerNow().toISOString(),
   };
 
   const currentInteractions = sessionData.popupInteractions || [];
@@ -265,9 +279,9 @@ const formatCountdown = (seconds: number): string => {
     .padStart(2, '0')}`;
 };
 
-// Calculate popup timing
+// Calculate popup timing using server time
 const calculatePopupTiming = (): PopupTimeData => {
-  const popupStartTime = new Date().toISOString();
+  const popupStartTime = getServerNow().toISOString();
   const popupEndTime = new Date(
     new Date(popupStartTime).getTime() + COUNTDOWN_DURATION * 1000
   ).toISOString();
@@ -292,7 +306,7 @@ const updateSessionWithPopupData = (popupData: PopupTimeData): void => {
   localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
 };
 
-// Update countdown display (display-only uses ceil to avoid starting at N-1)
+// Update countdown display
 const updateCountdownDisplay = (remainingSeconds: number): void => {
   const countdownElement = document.getElementById('timeUpCountdown');
   if (countdownElement) {
@@ -303,7 +317,7 @@ const updateCountdownDisplay = (remainingSeconds: number): void => {
   }
 };
 
-// Calculate remaining time
+// Calculate remaining time (seconds) using server time
 const calculateRemainingTime = (): number => {
   const currentSessionData = getSessionData();
   if (!currentSessionData?.popupEndTime) {
@@ -311,12 +325,12 @@ const calculateRemainingTime = (): number => {
   }
 
   const popupEnd = new Date(currentSessionData.popupEndTime);
-  const now = new Date();
+  const now = getServerNow();
   const timeLeftMs = popupEnd.getTime() - now.getTime();
   return Math.max(0, Math.floor(timeLeftMs / 1000));
 };
 
-// Calculate remaining time in milliseconds for precise timing
+// Calculate remaining time in milliseconds for precise timing using server time
 const calculateRemainingTimeMs = (): number => {
   const currentSessionData = getSessionData();
   if (!currentSessionData?.popupEndTime) {
@@ -324,7 +338,7 @@ const calculateRemainingTimeMs = (): number => {
   }
 
   const popupEnd = new Date(currentSessionData.popupEndTime);
-  const now = new Date();
+  const now = getServerNow();
   return Math.max(0, popupEnd.getTime() - now.getTime());
 };
 
@@ -346,26 +360,30 @@ const handleCountdownUpdate = (
       clearInterval(countdownState.interval);
       countdownState.interval = null;
     }
+    if (countdownState.unsubscribe) {
+      countdownState.unsubscribe();
+      countdownState.unsubscribe = null;
+    }
     console.log('Countdown finished - auto-submitting session');
     onTimeUp();
     Swal.close();
   }
 };
 
-// Setup countdown functionality
+// Setup countdown functionality (driven by server time via SSE)
 const setupCountdown = (
   countdownState: CountdownState,
   onTimeUp: () => void | Promise<void>
 ): void => {
-  console.log('Popup opened, starting countdown...');
+  console.log('Popup opened, starting countdown (server time)...');
 
   // Initial update
   handleCountdownUpdate(countdownState, onTimeUp);
 
-  // Start countdown interval
-  countdownState.interval = setInterval(() => {
+  // Subscribe to SSE server time updates to drive countdown
+  countdownState.unsubscribe = subscribeSSE(() => {
     handleCountdownUpdate(countdownState, onTimeUp);
-  }, 1000);
+  });
 };
 
 // Cleanup countdown
@@ -374,6 +392,12 @@ const cleanupCountdown = (countdownState: CountdownState): void => {
     clearInterval(countdownState.interval);
     countdownState.interval = null;
     console.log('Countdown interval cleared');
+  }
+
+  if (countdownState.unsubscribe) {
+    countdownState.unsubscribe();
+    countdownState.unsubscribe = null;
+    console.log('Countdown SSE subscription cleared');
   }
 
   // Clear popup countdown status from session data
@@ -392,7 +416,7 @@ const handleUserInteraction = (result: {
   isConfirmed: boolean;
   dismiss?: Swal.DismissReason;
 }): void => {
-  const clickTime = new Date().toISOString();
+  const clickTime = getServerNow().toISOString();
 
   if (result.isConfirmed) {
     console.log('User clicked Yes - continue work');
@@ -476,7 +500,7 @@ const handleAutoSubmit = async (): Promise<void> => {
   const sessionData = getSessionData();
   if (sessionData) {
     // Compute and persist total active/inactive times (keep decimals)
-    const endTimeIso = new Date().toISOString();
+    const endTimeIso = getServerNow().toISOString();
     const totalSessionTimeSec =
       (new Date(endTimeIso).getTime() -
         new Date(sessionData.startTime).getTime()) /
@@ -490,7 +514,7 @@ const handleAutoSubmit = async (): Promise<void> => {
       try {
         const waitStartMs = new Date(sessionData.lastPopupTime).getTime();
         const waitEndMs = Math.min(
-          Date.now(),
+          getServerNow().getTime(),
           new Date(sessionData.popupEndTime).getTime()
         );
         const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
@@ -526,7 +550,14 @@ const handleAutoSubmit = async (): Promise<void> => {
       totalPausedTime: updatedSession.totalPausedTime,
       defects: updatedSession.defects,
       totalParts: updatedSession.totalParts,
-      pauseRecords: updatedSession.pauseRecords,
+      pauseRecords: Array.isArray(updatedSession.pauseRecords)
+        ? (updatedSession.pauseRecords as PauseRecord[]).map(
+            (r: PauseRecord) => ({
+              start: r.startTime,
+              end: r.endTime,
+            })
+          )
+        : [],
       popupInteractions: updatedSession.popupInteractions,
       submissionType: 'AUTO_SUBMIT',
       endTime: endTimeIso,
@@ -557,14 +588,4 @@ const handleAutoSubmit = async (): Promise<void> => {
   localStorage.removeItem('sessionData');
 
   window.location.href = '/login';
-
-  // Swal.fire({
-  //   title: 'Session Auto-Submitted',
-  //   text: 'Session has been automatically submitted due to inactivity.',
-  //   icon: 'info',
-  //   confirmButtonText: 'OK',
-  //   confirmButtonColor: '#ec4899',
-  // }).then(() => {
-  //   window.location.href = '/login';
-  // });
 };
