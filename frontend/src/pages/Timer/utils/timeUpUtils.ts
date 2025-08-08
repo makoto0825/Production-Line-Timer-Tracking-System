@@ -292,7 +292,7 @@ const updateSessionWithPopupData = (popupData: PopupTimeData): void => {
   localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
 };
 
-// Update countdown display
+// Update countdown display (display-only uses ceil to avoid starting at N-1)
 const updateCountdownDisplay = (remainingSeconds: number): void => {
   const countdownElement = document.getElementById('timeUpCountdown');
   if (countdownElement) {
@@ -316,16 +316,30 @@ const calculateRemainingTime = (): number => {
   return Math.max(0, Math.floor(timeLeftMs / 1000));
 };
 
+// Calculate remaining time for display (uses ceil so the first second shows as full second)
+const calculateRemainingTimeForDisplay = (): number => {
+  const currentSessionData = getSessionData();
+  if (!currentSessionData?.popupEndTime) {
+    return 0;
+  }
+
+  const popupEnd = new Date(currentSessionData.popupEndTime);
+  const now = new Date();
+  const timeLeftMs = popupEnd.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(timeLeftMs / 1000));
+};
+
 // Handle countdown update
 const handleCountdownUpdate = (
   countdownState: CountdownState,
   onTimeUp: () => void | Promise<void>
 ): void => {
-  const remainingSeconds = calculateRemainingTime();
+  const remainingSeconds = calculateRemainingTime(); // logic (floor)
+  const displaySeconds = calculateRemainingTimeForDisplay(); // UI (ceil)
 
-  // Always update display and log countdown
-  console.log('Countdown:', formatCountdown(remainingSeconds));
-  updateCountdownDisplay(remainingSeconds);
+  // Always update display and log countdown (display uses ceil)
+  console.log('Countdown:', formatCountdown(displaySeconds));
+  updateCountdownDisplay(displaySeconds);
 
   // Check if countdown reached 0
   if (remainingSeconds <= 0) {
@@ -469,9 +483,24 @@ const handleAutoSubmit = async (): Promise<void> => {
         new Date(sessionData.startTime).getTime()) /
       1000;
     // totalInactiveTime = totalPausedTime + accumulated popup wait
-    const popupWaitAccumSec =
+    // Add final popup wait segment for AUTO_SUBMIT (no button clicked case)
+    let popupWaitAccumSec =
       (sessionData as unknown as { popupWaitAccumSec?: number })
         .popupWaitAccumSec || 0;
+    if (sessionData.lastPopupTime && sessionData.popupEndTime) {
+      try {
+        const waitStartMs = new Date(sessionData.lastPopupTime).getTime();
+        const waitEndMs = Math.min(
+          Date.now(),
+          new Date(sessionData.popupEndTime).getTime()
+        );
+        const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
+        popupWaitAccumSec += waitSec;
+        console.log('Auto-submit added popup wait (sec):', waitSec);
+      } catch (e) {
+        console.warn('Failed to compute popup wait for auto-submit:', e);
+      }
+    }
     const totalInactiveTimeSec =
       (sessionData.totalPausedTime || 0) + popupWaitAccumSec;
     const totalActiveTimeSec = Math.max(
@@ -526,9 +555,9 @@ const handleAutoSubmit = async (): Promise<void> => {
   }
 
   // Clear session data and redirect to login (simulate submission complete)
-  localStorage.removeItem('sessionData');
+  // localStorage.removeItem('sessionData');
 
-  window.location.href = '/login';
+  // window.location.href = '/login';
 
   // Swal.fire({
   //   title: 'Session Auto-Submitted',
