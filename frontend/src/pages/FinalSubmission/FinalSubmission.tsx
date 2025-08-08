@@ -1,8 +1,11 @@
 import React from 'react';
 import Card from '../../commonComponents/Card';
 import Button from '../../commonComponents/Button';
+import { useFinalSubmission } from './hooks/useFinalSubmission';
 
-const FinalSubmission: React.FC = () => {
+const FinalSubmission = () => {
+  const { totalParts, handleTotalPartsChange } = useFinalSubmission();
+
   return (
     <div className='min-h-screen bg-gradient-to-br via-blue-50 to-indigo-100 from-slate-50'>
       {/* Header Section */}
@@ -31,14 +34,12 @@ const FinalSubmission: React.FC = () => {
                   <input
                     type='number'
                     id='totalParts'
+                    value={totalParts}
+                    onChange={handleTotalPartsChange}
                     placeholder='0'
                     min='0'
                     className='px-4 py-3 w-full rounded-lg border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent'
-                    disabled
                   />
-                  <p className='mt-1 text-xs text-gray-400'>
-                    (Layout only / disabled)
-                  </p>
                 </div>
               </div>
             }
