@@ -555,9 +555,9 @@ const handleAutoSubmit = async (): Promise<void> => {
   }
 
   // Clear session data and redirect to login (simulate submission complete)
-  // localStorage.removeItem('sessionData');
+  localStorage.removeItem('sessionData');
 
-  // window.location.href = '/login';
+  window.location.href = '/login';
 
   // Swal.fire({
   //   title: 'Session Auto-Submitted',
