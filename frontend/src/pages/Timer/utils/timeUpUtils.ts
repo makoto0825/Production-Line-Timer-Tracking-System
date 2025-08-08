@@ -30,7 +30,7 @@ interface PopupTimeData {
 }
 
 interface CountdownState {
-  interval: NodeJS.Timeout | null;
+  interval: number | null;
   isActive: boolean;
   unsubscribe: (() => void) | null;
 }

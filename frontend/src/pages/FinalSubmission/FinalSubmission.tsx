@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../commonComponents/Card';
 import Button from '../../commonComponents/Button';
