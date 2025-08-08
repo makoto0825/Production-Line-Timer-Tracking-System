@@ -381,10 +381,70 @@ const handleUserInteraction = (result: {
   if (result.isConfirmed) {
     console.log('User clicked Yes - continue work');
     recordPopupInteraction('YES');
+    // Accumulate popup waiting time into session
+    try {
+      const sessionData = getSessionData();
+      if (sessionData?.lastPopupTime && sessionData?.popupEndTime) {
+        const waitStartMs = new Date(sessionData.lastPopupTime).getTime();
+        const waitEndMs = Math.min(
+          new Date(clickTime).getTime(),
+          new Date(sessionData.popupEndTime).getTime()
+        );
+        const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
+        const updated: Record<string, unknown> = {
+          ...sessionData,
+          popupWaitAccumSec: (
+            sessionData as unknown as { popupWaitAccumSec?: number }
+          ).popupWaitAccumSec
+            ? (sessionData as unknown as { popupWaitAccumSec?: number })
+                .popupWaitAccumSec! + waitSec
+            : waitSec,
+        };
+        localStorage.setItem('sessionData', JSON.stringify(updated));
+        console.log('Accumulated popup wait (sec):', waitSec);
+        console.log(
+          'popupWaitAccumSec total (sec):',
+          (updated as { popupWaitAccumSec?: number }).popupWaitAccumSec
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to accumulate popup wait time:', e);
+    }
+
     scheduleNextPopup(clickTime);
   } else if (result.dismiss === Swal.DismissReason.cancel) {
     console.log('User clicked No - continue work');
     recordPopupInteraction('NO');
+    // Accumulate popup waiting time into session
+    try {
+      const sessionData = getSessionData();
+      if (sessionData?.lastPopupTime && sessionData?.popupEndTime) {
+        const waitStartMs = new Date(sessionData.lastPopupTime).getTime();
+        const waitEndMs = Math.min(
+          new Date(clickTime).getTime(),
+          new Date(sessionData.popupEndTime).getTime()
+        );
+        const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
+        const updated: Record<string, unknown> = {
+          ...sessionData,
+          popupWaitAccumSec: (
+            sessionData as unknown as { popupWaitAccumSec?: number }
+          ).popupWaitAccumSec
+            ? (sessionData as unknown as { popupWaitAccumSec?: number })
+                .popupWaitAccumSec! + waitSec
+            : waitSec,
+        };
+        localStorage.setItem('sessionData', JSON.stringify(updated));
+        console.log('Accumulated popup wait (sec):', waitSec);
+        console.log(
+          'popupWaitAccumSec total (sec):',
+          (updated as { popupWaitAccumSec?: number }).popupWaitAccumSec
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to accumulate popup wait time:', e);
+    }
+
     scheduleNextPopup(clickTime);
   }
 };
@@ -417,19 +477,52 @@ const handleAutoSubmit = () => {
     console.log('Next Popup Active Time:', sessionData.nextPopupActiveTime);
     console.log('Last Popup Click Time:', sessionData.lastPopupClickTime);
     console.log('Is Popup Scheduled:', sessionData.isPopupScheduled);
+
+    // Compute and persist total active/inactive times (keep decimals)
+    const endTimeIso = new Date().toISOString();
+    const totalSessionTimeSec =
+      (new Date(endTimeIso).getTime() -
+        new Date(sessionData.startTime).getTime()) /
+      1000;
+    // totalInactiveTime = totalPausedTime + accumulated popup wait
+    const popupWaitAccumSec =
+      (sessionData as unknown as { popupWaitAccumSec?: number })
+        .popupWaitAccumSec || 0;
+    const totalInactiveTimeSec =
+      (sessionData.totalPausedTime || 0) + popupWaitAccumSec;
+    const totalActiveTimeSec = Math.max(
+      0,
+      totalSessionTimeSec - totalInactiveTimeSec
+    );
+
+    // Save back to session object
+    const updatedSession = {
+      ...sessionData,
+      totalActiveTimeSec,
+      totalInactiveTimeSec,
+      popupWaitAccumSec,
+    };
+    localStorage.setItem('sessionData', JSON.stringify(updatedSession));
+
+    console.log('End Time:', endTimeIso);
+    console.log('Total-Active-time (sec):', totalActiveTimeSec);
+    console.log('Total-inactive-time (sec):', totalInactiveTimeSec);
+    console.log('Popup-wait-accum (sec):', popupWaitAccumSec);
     console.log('===============================================');
   }
 
   // Clear session data and redirect to login (simulate submission complete)
   localStorage.removeItem('sessionData');
 
-  Swal.fire({
-    title: 'Session Auto-Submitted',
-    text: 'Session has been automatically submitted due to inactivity.',
-    icon: 'info',
-    confirmButtonText: 'OK',
-    confirmButtonColor: '#ec4899',
-  }).then(() => {
-    window.location.href = '/login';
-  });
+  window.location.href = '/login';
+
+  // Swal.fire({
+  //   title: 'Session Auto-Submitted',
+  //   text: 'Session has been automatically submitted due to inactivity.',
+  //   icon: 'info',
+  //   confirmButtonText: 'OK',
+  //   confirmButtonColor: '#ec4899',
+  // }).then(() => {
+  //   window.location.href = '/login';
+  // });
 };
