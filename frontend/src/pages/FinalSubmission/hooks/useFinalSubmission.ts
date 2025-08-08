@@ -7,6 +7,7 @@ import type { PauseRecord } from '../../Timer/utils/pauseUtils';
 
 // API endpoint for session submission
 const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
+const SESSION_LOCKS_API_URL = 'http://localhost:5000/api/session-locks';
 
 export const useFinalSubmission = () => {
   const [totalParts, setTotalParts] = useState('0');
@@ -125,6 +126,17 @@ export const useFinalSubmission = () => {
       }
 
       console.log('Manual session submission succeeded');
+
+      // Best-effort release of session lock
+      try {
+        await fetch(`${SESSION_LOCKS_API_URL}/release`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ loginId: parsed.loginId }),
+        });
+      } catch (e) {
+        console.warn('Failed to release session lock:', e);
+      }
 
       // Clear session data and redirect to login
       localStorage.removeItem('sessionData');
