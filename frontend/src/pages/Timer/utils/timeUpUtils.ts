@@ -3,10 +3,10 @@ import { timeUpPopupConfig } from '../../../modalUI/swalConfigs';
 import { getSessionData } from './sessionUtils';
 
 // 5 seconds for testing (normally 10 minutes)
-const COUNTDOWN_DURATION = 30; // 5 seconds for testing
+const COUNTDOWN_DURATION = 5; // 5 seconds for testing
 
 // 5 seconds for testing (normally 10 minutes)
-const POPUP_INTERVAL = 30; // 5 seconds for testing
+const POPUP_INTERVAL = 5; // 5 seconds for testing
 
 // Types for better type safety
 interface PopupTimeData {
