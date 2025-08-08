@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import buildsRouter from './routes/builds';
 import sessionsRouter from './routes/sessions';
 import timerRouter from './routes/timer';
+import sessionLocksRouter from './routes/sessionLocks';
 // read .env file
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.get('/api/hello', (req, res) => {
 app.use('/api/builds', buildsRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api', timerRouter);
+app.use('/api', sessionLocksRouter);
 
 // import partsRouter from './routes/parts';
 // app.use('/api/parts', partsRouter);
