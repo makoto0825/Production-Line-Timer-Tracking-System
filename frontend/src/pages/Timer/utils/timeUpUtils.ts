@@ -2,6 +2,9 @@ import Swal from 'sweetalert2';
 import { timeUpPopupConfig } from '../../../modalUI/swalConfigs';
 import { getSessionData } from './sessionUtils';
 
+// Frontend-only submission endpoint (adjust as needed)
+const SESSIONS_API_URL = 'http://localhost:5000/api/sessions';
+
 // 5 seconds for testing (normally 10 minutes)
 const COUNTDOWN_DURATION = 5; // 5 seconds for testing
 
@@ -289,7 +292,7 @@ const updateSessionWithPopupData = (popupData: PopupTimeData): void => {
   localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
 };
 
-// Update countdown display
+// Update countdown display (display-only uses ceil to avoid starting at N-1)
 const updateCountdownDisplay = (remainingSeconds: number): void => {
   const countdownElement = document.getElementById('timeUpCountdown');
   if (countdownElement) {
@@ -313,16 +316,30 @@ const calculateRemainingTime = (): number => {
   return Math.max(0, Math.floor(timeLeftMs / 1000));
 };
 
+// Calculate remaining time for display (uses ceil so the first second shows as full second)
+const calculateRemainingTimeForDisplay = (): number => {
+  const currentSessionData = getSessionData();
+  if (!currentSessionData?.popupEndTime) {
+    return 0;
+  }
+
+  const popupEnd = new Date(currentSessionData.popupEndTime);
+  const now = new Date();
+  const timeLeftMs = popupEnd.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(timeLeftMs / 1000));
+};
+
 // Handle countdown update
 const handleCountdownUpdate = (
   countdownState: CountdownState,
-  onTimeUp: () => void
+  onTimeUp: () => void | Promise<void>
 ): void => {
-  const remainingSeconds = calculateRemainingTime();
+  const remainingSeconds = calculateRemainingTime(); // logic (floor)
+  const displaySeconds = calculateRemainingTimeForDisplay(); // UI (ceil)
 
-  // Always update display and log countdown
-  console.log('Countdown:', formatCountdown(remainingSeconds));
-  updateCountdownDisplay(remainingSeconds);
+  // Always update display and log countdown (display uses ceil)
+  console.log('Countdown:', formatCountdown(displaySeconds));
+  updateCountdownDisplay(displaySeconds);
 
   // Check if countdown reached 0
   if (remainingSeconds <= 0) {
@@ -339,7 +356,7 @@ const handleCountdownUpdate = (
 // Setup countdown functionality
 const setupCountdown = (
   countdownState: CountdownState,
-  onTimeUp: () => void
+  onTimeUp: () => void | Promise<void>
 ): void => {
   console.log('Popup opened, starting countdown...');
 
@@ -381,16 +398,76 @@ const handleUserInteraction = (result: {
   if (result.isConfirmed) {
     console.log('User clicked Yes - continue work');
     recordPopupInteraction('YES');
+    // Accumulate popup waiting time into session
+    try {
+      const sessionData = getSessionData();
+      if (sessionData?.lastPopupTime && sessionData?.popupEndTime) {
+        const waitStartMs = new Date(sessionData.lastPopupTime).getTime();
+        const waitEndMs = Math.min(
+          new Date(clickTime).getTime(),
+          new Date(sessionData.popupEndTime).getTime()
+        );
+        const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
+        const updated: Record<string, unknown> = {
+          ...sessionData,
+          popupWaitAccumSec: (
+            sessionData as unknown as { popupWaitAccumSec?: number }
+          ).popupWaitAccumSec
+            ? (sessionData as unknown as { popupWaitAccumSec?: number })
+                .popupWaitAccumSec! + waitSec
+            : waitSec,
+        };
+        localStorage.setItem('sessionData', JSON.stringify(updated));
+        console.log('Accumulated popup wait (sec):', waitSec);
+        console.log(
+          'popupWaitAccumSec total (sec):',
+          (updated as { popupWaitAccumSec?: number }).popupWaitAccumSec
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to accumulate popup wait time:', e);
+    }
+
     scheduleNextPopup(clickTime);
   } else if (result.dismiss === Swal.DismissReason.cancel) {
     console.log('User clicked No - continue work');
     recordPopupInteraction('NO');
+    // Accumulate popup waiting time into session
+    try {
+      const sessionData = getSessionData();
+      if (sessionData?.lastPopupTime && sessionData?.popupEndTime) {
+        const waitStartMs = new Date(sessionData.lastPopupTime).getTime();
+        const waitEndMs = Math.min(
+          new Date(clickTime).getTime(),
+          new Date(sessionData.popupEndTime).getTime()
+        );
+        const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
+        const updated: Record<string, unknown> = {
+          ...sessionData,
+          popupWaitAccumSec: (
+            sessionData as unknown as { popupWaitAccumSec?: number }
+          ).popupWaitAccumSec
+            ? (sessionData as unknown as { popupWaitAccumSec?: number })
+                .popupWaitAccumSec! + waitSec
+            : waitSec,
+        };
+        localStorage.setItem('sessionData', JSON.stringify(updated));
+        console.log('Accumulated popup wait (sec):', waitSec);
+        console.log(
+          'popupWaitAccumSec total (sec):',
+          (updated as { popupWaitAccumSec?: number }).popupWaitAccumSec
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to accumulate popup wait time:', e);
+    }
+
     scheduleNextPopup(clickTime);
   }
 };
 
 // Handle auto-submit when countdown reaches 0
-const handleAutoSubmit = () => {
+const handleAutoSubmit = async (): Promise<void> => {
   console.log('Auto-submitting session data...');
 
   // Record auto-submit interaction
@@ -399,37 +476,96 @@ const handleAutoSubmit = () => {
   // Collect and log session data for submission (placeholder)
   const sessionData = getSessionData();
   if (sessionData) {
-    console.log('=== SESSION DATA FOR SUBMISSION (AUTO_SUBMIT) ===');
-    console.log('Login ID:', sessionData.loginId);
-    console.log('Build Number:', sessionData.buildData.buildNumber);
-    console.log('Number of Parts:', sessionData.buildData.numberOfParts);
-    console.log('Time Per Part:', sessionData.buildData.timePerPart);
-    console.log('Start Time:', sessionData.startTime);
-    console.log('Total Paused Time:', sessionData.totalPausedTime);
-    console.log('Defects:', sessionData.defects);
-    console.log('Total Parts:', sessionData.totalParts);
-    console.log('Status:', sessionData.status);
-    console.log('Pause Records:', sessionData.pauseRecords);
-    console.log('Popup Interactions:', sessionData.popupInteractions);
-    console.log('Last Popup Time:', sessionData.lastPopupTime);
-    console.log('Popup End Time:', sessionData.popupEndTime);
-    console.log('Popup Countdown Active:', sessionData.popupCountdownActive);
-    console.log('Next Popup Active Time:', sessionData.nextPopupActiveTime);
-    console.log('Last Popup Click Time:', sessionData.lastPopupClickTime);
-    console.log('Is Popup Scheduled:', sessionData.isPopupScheduled);
-    console.log('===============================================');
+    // Compute and persist total active/inactive times (keep decimals)
+    const endTimeIso = new Date().toISOString();
+    const totalSessionTimeSec =
+      (new Date(endTimeIso).getTime() -
+        new Date(sessionData.startTime).getTime()) /
+      1000;
+    // totalInactiveTime = totalPausedTime + accumulated popup wait
+    // Add final popup wait segment for AUTO_SUBMIT (no button clicked case)
+    let popupWaitAccumSec =
+      (sessionData as unknown as { popupWaitAccumSec?: number })
+        .popupWaitAccumSec || 0;
+    if (sessionData.lastPopupTime && sessionData.popupEndTime) {
+      try {
+        const waitStartMs = new Date(sessionData.lastPopupTime).getTime();
+        const waitEndMs = Math.min(
+          Date.now(),
+          new Date(sessionData.popupEndTime).getTime()
+        );
+        const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
+        popupWaitAccumSec += waitSec;
+        console.log('Auto-submit added popup wait (sec):', waitSec);
+      } catch (e) {
+        console.warn('Failed to compute popup wait for auto-submit:', e);
+      }
+    }
+    const totalInactiveTimeSec =
+      (sessionData.totalPausedTime || 0) + popupWaitAccumSec;
+    const totalActiveTimeSec = Math.max(
+      0,
+      totalSessionTimeSec - totalInactiveTimeSec
+    );
+
+    // Save back to session object
+    const updatedSession = {
+      ...sessionData,
+      totalActiveTimeSec,
+      totalInactiveTimeSec,
+      popupWaitAccumSec,
+    };
+    localStorage.setItem('sessionData', JSON.stringify(updatedSession));
+
+    // Build submission payload
+    const payload = {
+      loginId: updatedSession.loginId,
+      buildNumber: updatedSession.buildData?.buildNumber,
+      numberOfParts: updatedSession.buildData?.numberOfParts,
+      timePerPart: updatedSession.buildData?.timePerPart,
+      startTime: updatedSession.startTime,
+      totalPausedTime: updatedSession.totalPausedTime,
+      defects: updatedSession.defects,
+      totalParts: updatedSession.totalParts,
+      pauseRecords: updatedSession.pauseRecords,
+      popupInteractions: updatedSession.popupInteractions,
+      submissionType: 'AUTO_SUBMIT',
+      endTime: endTimeIso,
+      totalActiveTimeSec,
+      totalInactiveTimeSec,
+      popupWaitAccumSec,
+    };
+
+    // Await POST to backend API (frontend only for now)
+    try {
+      const res = await fetch(SESSIONS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      console.log('Session submission response:', res);
+      if (!res.ok) {
+        console.warn('Session submission failed with status:', res.status);
+      } else {
+        console.log('Session submission succeeded');
+      }
+    } catch (err) {
+      console.warn('Session submission error:', err);
+    }
   }
 
   // Clear session data and redirect to login (simulate submission complete)
-  localStorage.removeItem('sessionData');
+  // localStorage.removeItem('sessionData');
 
-  Swal.fire({
-    title: 'Session Auto-Submitted',
-    text: 'Session has been automatically submitted due to inactivity.',
-    icon: 'info',
-    confirmButtonText: 'OK',
-    confirmButtonColor: '#ec4899',
-  }).then(() => {
-    window.location.href = '/login';
-  });
+  // window.location.href = '/login';
+
+  // Swal.fire({
+  //   title: 'Session Auto-Submitted',
+  //   text: 'Session has been automatically submitted due to inactivity.',
+  //   icon: 'info',
+  //   confirmButtonText: 'OK',
+  //   confirmButtonColor: '#ec4899',
+  // }).then(() => {
+  //   window.location.href = '/login';
+  // });
 };

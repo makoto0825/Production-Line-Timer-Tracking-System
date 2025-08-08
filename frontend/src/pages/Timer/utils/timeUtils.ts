@@ -24,11 +24,15 @@ export const calculateTimeLeft = (
 
 // Format time function (hh:mm:ss format)
 export const formatTime = (seconds: number): string => {
-  const hours = Math.floor(Math.abs(seconds) / 3600);
-  const minutes = Math.floor((Math.abs(seconds) % 3600) / 60);
-  const secs = Math.floor(Math.abs(seconds) % 60);
+  // Display-only rounding: positive values use ceil so countdown starts at full second
+  const roundedSeconds =
+    seconds >= 0 ? Math.ceil(seconds) : Math.floor(seconds);
+  const abs = Math.abs(roundedSeconds);
+  const hours = Math.floor(abs / 3600);
+  const minutes = Math.floor((abs % 3600) / 60);
+  const secs = abs % 60;
 
-  const sign = seconds < 0 ? '-' : '';
+  const sign = roundedSeconds < 0 ? '-' : '';
   return `${sign}${hours.toString().padStart(2, '0')}:${minutes
     .toString()
     .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
