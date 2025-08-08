@@ -1,0 +1,40 @@
+services:
+  # Backend API Service
+  - type: web
+    name: production-timer-backend
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/hello
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        value: mongodb+srv://makoto:Makoto0825@cluster0.rx68s45.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: FRONTEND_URL
+        value: https://production-timer-frontend.onrender.com
+      - key: DEFAULT_LOCK_TTL_MINUTES
+        value: 120
+
+  # Frontend Static Site
+  - type: web
+    name: production-timer-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://production-timer-backend.onrender.com
+      - key: VITE_COUNTDOWN_DURATION
+        value: 30
+      - key: VITE_POPUP_INTERVAL
+        value: 30
+# Database (MongoDB Atlas を使用するため不要)
+# databases:
+#   - name: production-timer-db
+#     databaseName: production_timer
+#     user: admin
+#     plan: free
