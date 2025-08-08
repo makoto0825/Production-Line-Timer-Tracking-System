@@ -69,6 +69,8 @@ export const checkPopupCountdownOnLoad = () => {
   // If countdown is still active, return true to indicate popup should be shown
   if (timeLeftMs > 0) {
     console.log('Resuming popup countdown on page load');
+    // Resume existing countdown instead of creating new one
+    resumeExistingCountdown();
     return true;
   } else {
     // Countdown finished while page was closed, auto-submit
@@ -76,6 +78,29 @@ export const checkPopupCountdownOnLoad = () => {
     handleAutoSubmit();
     return true;
   }
+};
+
+// Resume existing countdown without creating new popup
+const resumeExistingCountdown = async () => {
+  console.log('Resuming existing countdown...');
+
+  // Initialize countdown state
+  const countdownState: CountdownState = {
+    interval: null,
+    isActive: true,
+  };
+
+  // Create popup with existing countdown
+  const result = await Swal.fire({
+    ...timeUpPopupConfig,
+    didOpen: () => setupCountdown(countdownState, handleAutoSubmit),
+    willClose: () => cleanupCountdown(countdownState),
+  });
+
+  // Handle user interaction
+  handleUserInteraction(result);
+
+  return result;
 };
 
 // Schedule next time-up popup in 10 minutes

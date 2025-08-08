@@ -39,8 +39,7 @@ export const useTimer = () => {
     if (checkPopupCountdownOnLoad()) {
       // Show popup if countdown is still active
       setHasTimeUpPopupShown(true); // Set flag to prevent double popup
-      handleTimeUpPopup();
-      return; // Popup countdown is being handled
+      return; // Popup countdown is being handled by checkPopupCountdownOnLoad
     }
 
     // Show pause modal if status is paused
