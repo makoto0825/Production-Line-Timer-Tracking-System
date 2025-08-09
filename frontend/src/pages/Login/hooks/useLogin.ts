@@ -33,8 +33,6 @@ export const useLogin = () => {
     setIsLoading(true);
 
     try {
-      console.log('🔍 Fetching build data for:', buildNumber);
-
       const buildData = await fetchBuildData(buildNumber); //fetch build data from server
 
       if (buildData) {

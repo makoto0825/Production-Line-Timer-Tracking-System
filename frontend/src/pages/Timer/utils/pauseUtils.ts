@@ -51,22 +51,12 @@ export const createPauseRecord = (): PauseRecord => {
 export const updatePauseRecord = (
   pauseRecords: PauseRecord[]
 ): PauseRecord[] => {
-  console.log('updatePauseRecord - input:', pauseRecords);
-
   const result = pauseRecords.map((record, index) => {
-    console.log(
-      `Record ${index}:`,
-      record,
-      'endTime exists:',
-      !!record.endTime
-    );
-
     if (index === pauseRecords.length - 1 && !record.endTime) {
       const updatedRecord = {
         ...record,
         endTime: nowIso(),
       };
-      console.log(`Updating record ${index}:`, updatedRecord);
       return updatedRecord;
     }
     return record;

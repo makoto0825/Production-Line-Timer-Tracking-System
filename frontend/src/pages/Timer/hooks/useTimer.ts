@@ -40,7 +40,6 @@ export const useTimer = () => {
   useEffect(() => {
     const sessionData = getSessionData();
     if (!sessionData) {
-      console.log('No session data found, redirecting to login');
       navigate('/login');
       return;
     }
@@ -95,7 +94,6 @@ export const useTimer = () => {
 
       // Check for scheduled popup (considering pause time)
       if (checkScheduledPopup()) {
-        console.log('Scheduled popup triggered');
         setHasTimeUpPopupShown(true);
         return;
       }
@@ -112,14 +110,10 @@ export const useTimer = () => {
 
           // If we're still within the grace period, don't show popup
           if (currentActiveTime < sessionData.nextPopupActiveTime) {
-            console.log(
-              `Main timer is negative but within grace period. Current: ${currentActiveTime}s, Scheduled: ${sessionData.nextPopupActiveTime}s`
-            );
             return;
           }
         }
 
-        console.log('Time is up! Triggering popup...');
         setHasTimeUpPopupShown(true);
         handleTimeUpPopup();
       }
@@ -164,7 +158,6 @@ export const useTimer = () => {
   // ===== NAVIGATION =====
   // Handle next page navigation
   const handleNext = () => {
-    console.log('Navigate to Final Submission');
     navigate('/final');
   };
 
@@ -182,10 +175,6 @@ export const useTimer = () => {
         defects: parseInt(newDefectsValue) || 0,
       };
       localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
-      console.log(
-        'Updated defects in session data:',
-        updatedSessionData.defects
-      );
     }
   };
 

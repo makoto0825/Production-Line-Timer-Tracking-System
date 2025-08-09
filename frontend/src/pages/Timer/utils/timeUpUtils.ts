@@ -42,8 +42,6 @@ interface PopupInteraction {
 
 // Main function: Handle time-up popup display and user interaction with countdown
 export const handleTimeUpPopup = async () => {
-  console.log('Showing time-up popup with countdown...');
-
   try {
     // Ensure SSE is initialized (idempotent)
     initSSE();
@@ -91,13 +89,11 @@ export const checkPopupCountdownOnLoad = () => {
 
   // If countdown is still active, return true to indicate popup should be shown
   if (timeLeftMs > 0) {
-    console.log('Resuming popup countdown on page load');
     // Resume existing countdown instead of creating new one
     resumeExistingCountdown();
     return true;
   } else {
     // Countdown finished while page was closed, auto-submit
-    console.log('Countdown finished while page was closed, auto-submitting');
     handleAutoSubmit();
     return true;
   }
@@ -122,7 +118,6 @@ export const checkScheduledPopup = (): boolean => {
   const shouldShow = currentActiveTime >= sessionData.nextPopupActiveTime;
 
   if (shouldShow) {
-    console.log('Scheduled popup time reached, showing popup...');
     // Reset schedule and show popup
     resetPopupSchedule();
     handleTimeUpPopup();
@@ -154,8 +149,6 @@ const validateScheduledPopup = (): boolean => {
 
 // Resume existing countdown without creating new popup
 const resumeExistingCountdown = async () => {
-  console.log('Resuming existing countdown...');
-
   // Ensure SSE is initialized (idempotent)
   initSSE();
 
@@ -181,7 +174,6 @@ const resumeExistingCountdown = async () => {
 
 // Schedule next time-up popup in 10 minutes
 export const scheduleNextTimeUpPopup = () => {
-  console.log('Scheduling next popup in 10 minutes...');
   // TODO: Implement 10-minute interval popup functionality
   // This will be implemented in the next phase
 };
@@ -226,14 +218,6 @@ const scheduleNextPopup = (clickTime: string): void => {
   };
 
   localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
-  console.log(
-    `Scheduled next popup at active time: ${nextPopupActiveTime} seconds (current: ${currentActiveTime}s)`
-  );
-  console.log('Scheduled popup data saved:', {
-    nextPopupActiveTime,
-    lastPopupClickTime: clickTime,
-    isPopupScheduled: true,
-  });
 };
 
 // Reset popup schedule
@@ -249,7 +233,6 @@ const resetPopupSchedule = (): void => {
   };
 
   localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
-  console.log('Reset popup schedule');
 };
 
 // Record popup interaction (use server time)
@@ -272,9 +255,6 @@ const recordPopupInteraction = (type: PopupInteraction['type']): void => {
   };
 
   localStorage.setItem('sessionData', JSON.stringify(updatedSessionData));
-  console.log(
-    `Recorded popup interaction: ${type} at ${interaction.timestamp}`
-  );
 };
 
 // Format countdown time (mm:ss format)
@@ -358,7 +338,6 @@ const handleCountdownUpdate = (
   const remainingMs = calculateRemainingTimeMs();
 
   // Always update display and log countdown
-  console.log('Countdown:', formatCountdown(remainingSeconds));
   updateCountdownDisplay(remainingSeconds);
 
   // Check if countdown reached 0 using millisecond precision
@@ -371,7 +350,6 @@ const handleCountdownUpdate = (
       countdownState.unsubscribe();
       countdownState.unsubscribe = null;
     }
-    console.log('Countdown finished - auto-submitting session');
     onTimeUp();
     Swal.close();
   }
@@ -382,8 +360,6 @@ const setupCountdown = (
   countdownState: CountdownState,
   onTimeUp: () => void | Promise<void>
 ): void => {
-  console.log('Popup opened, starting countdown (server time)...');
-
   // Initial update
   handleCountdownUpdate(countdownState, onTimeUp);
 
@@ -398,13 +374,11 @@ const cleanupCountdown = (countdownState: CountdownState): void => {
   if (countdownState.interval) {
     clearInterval(countdownState.interval);
     countdownState.interval = null;
-    console.log('Countdown interval cleared');
   }
 
   if (countdownState.unsubscribe) {
     countdownState.unsubscribe();
     countdownState.unsubscribe = null;
-    console.log('Countdown SSE subscription cleared');
   }
 
   // Clear popup countdown status from session data
@@ -426,7 +400,6 @@ const handleUserInteraction = (result: {
   const clickTime = getServerNow().toISOString();
 
   if (result.isConfirmed) {
-    console.log('User clicked Yes - continue work');
     recordPopupInteraction('YES');
     // Accumulate popup waiting time into session
     try {
@@ -448,11 +421,6 @@ const handleUserInteraction = (result: {
             : waitSec,
         };
         localStorage.setItem('sessionData', JSON.stringify(updated));
-        console.log('Accumulated popup wait (sec):', waitSec);
-        console.log(
-          'popupWaitAccumSec total (sec):',
-          (updated as { popupWaitAccumSec?: number }).popupWaitAccumSec
-        );
       }
     } catch (e) {
       console.warn('Failed to accumulate popup wait time:', e);
@@ -460,7 +428,6 @@ const handleUserInteraction = (result: {
 
     scheduleNextPopup(clickTime);
   } else if (result.dismiss === Swal.DismissReason.cancel) {
-    console.log('User clicked No - continue work');
     recordPopupInteraction('NO');
     // Accumulate popup waiting time into session
     try {
@@ -482,11 +449,6 @@ const handleUserInteraction = (result: {
             : waitSec,
         };
         localStorage.setItem('sessionData', JSON.stringify(updated));
-        console.log('Accumulated popup wait (sec):', waitSec);
-        console.log(
-          'popupWaitAccumSec total (sec):',
-          (updated as { popupWaitAccumSec?: number }).popupWaitAccumSec
-        );
       }
     } catch (e) {
       console.warn('Failed to accumulate popup wait time:', e);
@@ -498,8 +460,6 @@ const handleUserInteraction = (result: {
 
 // Handle auto-submit when countdown reaches 0
 const handleAutoSubmit = async (): Promise<void> => {
-  console.log('Auto-submitting session data...');
-
   // Record auto-submit interaction
   recordPopupInteraction('AUTO_SUBMIT');
 
@@ -526,7 +486,6 @@ const handleAutoSubmit = async (): Promise<void> => {
         );
         const waitSec = Math.max(0, (waitEndMs - waitStartMs) / 1000);
         popupWaitAccumSec += waitSec;
-        console.log('Auto-submit added popup wait (sec):', waitSec);
       } catch (e) {
         console.warn('Failed to compute popup wait for auto-submit:', e);
       }
@@ -580,11 +539,9 @@ const handleAutoSubmit = async (): Promise<void> => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      console.log('Session submission response:', res);
       if (!res.ok) {
         console.warn('Session submission failed with status:', res.status);
       } else {
-        console.log('Session submission succeeded');
         // Best-effort release of session lock after successful auto submit
         try {
           await fetch(`${SESSION_LOCKS_API_URL}/release`, {
