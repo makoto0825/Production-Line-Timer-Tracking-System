@@ -37,9 +37,20 @@ const Login = () => {
       {/* Login Form */}
       <div className='flex justify-center items-center px-4'>
         <div className='p-8 w-full max-w-md rounded-2xl border shadow-xl backdrop-blur-sm bg-white/80 border-white/20'>
-          <h2 className='mb-8 text-2xl font-bold text-center text-gray-800'>
+          <h2 className='mb-4 text-2xl font-bold text-center text-gray-800'>
             Login
           </h2>
+
+          {/* Info Notice */}
+          <div className='mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm leading-relaxed'>
+            <p className='font-semibold mb-1'>Please note</p>
+            <p>
+              The application is hosted on Render’s free plan, so the first
+              backend connection during login may take a few minutes. Once the
+              connection is established, subsequent requests will respond
+              without delay.
+            </p>
+          </div>
 
           <form onSubmit={handleSubmitLogin} className='space-y-6'>
             <div>
