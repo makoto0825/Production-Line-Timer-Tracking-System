@@ -47,12 +47,6 @@ export const useTimer = () => {
     // Restore defects value from session data
     setDefects(sessionData.defects?.toString() || '0');
 
-    // Restore scheduled popup state on page load
-    if (sessionData.isPopupScheduled && sessionData.nextPopupActiveTime) {
-      console.log('Restoring scheduled popup state on page load');
-      // The scheduled popup will be checked in the timer update cycle
-    }
-
     // Check if popup countdown should be resumed
     if (checkPopupCountdownOnLoad()) {
       // Show popup if countdown is still active

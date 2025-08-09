@@ -74,7 +74,7 @@ export const calculateTotalPausedTime = (
   return pauseRecords.reduce((total, pause) => {
     const endTime = pause.endTime ? new Date(pause.endTime) : nowDate();
     const duration =
-      (endTime.getTime() - new Date(pause.startTime).getTime()) / 1000; // 秒単位
+      (endTime.getTime() - new Date(pause.startTime).getTime()) / 1000; // seconds
     return total + duration;
   }, 0);
 };
