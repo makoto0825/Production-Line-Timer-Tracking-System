@@ -4,6 +4,10 @@ import { getSessionData } from './sessionUtils';
 import { initSSE, subscribeSSE, getLatestServerTime } from './serverTimeClient';
 import type { PauseRecord } from './pauseUtils';
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 // Frontend-only submission endpoint (adjust as needed)
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -23,6 +27,10 @@ const POPUP_INTERVAL = parseInt(
 // Helper: get server "now" (fallback to client time)
 const getServerNow = (): Date => getLatestServerTime() ?? new Date();
 
+// ============================================================================
+// interface
+// ============================================================================
+
 // Types for better type safety
 interface PopupTimeData {
   popupStartTime: string;
@@ -39,6 +47,10 @@ interface PopupInteraction {
   type: 'YES' | 'NO' | 'AUTO_SUBMIT';
   timestamp: string;
 }
+
+// ============================================================================
+// MAIN FUNCTIONS
+// ============================================================================
 
 // Main function: Handle time-up popup display and user interaction with countdown
 export const handleTimeUpPopup = async () => {
@@ -127,6 +139,21 @@ export const checkScheduledPopup = (): boolean => {
   return false;
 };
 
+// Calculate active time (excluding pause time) using server now
+export const calculateActiveTime = (
+  startTime: string,
+  totalPausedTime: number
+): number => {
+  const now = getServerNow().getTime();
+  const start = new Date(startTime).getTime();
+  const totalTime = (now - start) / 1000; // Convert to seconds
+  return totalTime - totalPausedTime; // Active time only
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
 // Validate and restore scheduled popup state
 const validateScheduledPopup = (): boolean => {
   const sessionData = getSessionData();
@@ -170,27 +197,6 @@ const resumeExistingCountdown = async () => {
   handleUserInteraction(result);
 
   return result;
-};
-
-// Schedule next time-up popup in 10 minutes
-export const scheduleNextTimeUpPopup = () => {
-  // TODO: Implement 10-minute interval popup functionality
-  // This will be implemented in the next phase
-};
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-// Calculate active time (excluding pause time) using server now
-export const calculateActiveTime = (
-  startTime: string,
-  totalPausedTime: number
-): number => {
-  const now = getServerNow().getTime();
-  const start = new Date(startTime).getTime();
-  const totalTime = (now - start) / 1000; // Convert to seconds
-  return totalTime - totalPausedTime; // Active time only
 };
 
 // Schedule next popup considering active time
