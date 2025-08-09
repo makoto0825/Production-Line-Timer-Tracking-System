@@ -34,7 +34,7 @@ It enables workers to manage the progress of the production process, record defe
 ## 🎯 Main Features
 
 ### 🔐 Page 1: Login & Build Selection
-<img width="1901" height="978" alt="image" src="https://github.com/user-attachments/assets/5797693c-5f55-4a7f-ade2-539309093344" />
+<img width="1852" height="987" alt="image" src="https://github.com/user-attachments/assets/25ad020d-5c93-4abf-a2e8-1d84cfe04477" />
 
 
 - Authentication by Login ID and Build Number
@@ -68,7 +68,7 @@ It enables workers to manage the progress of the production process, record defe
 - **Manual submit**: Send comprehensive session data
 
 ## 🧪 Testing Instructions
-<img width="522" height="445" alt="image" src="https://github.com/user-attachments/assets/0b20a996-e9a1-43f2-8799-3a9480cc8743" />
+<img width="517" height="517" alt="image" src="https://github.com/user-attachments/assets/fdc5e89d-6837-4203-8876-bbb83ba00522" />
 
 When testing the application:
 Go to the Login page.
