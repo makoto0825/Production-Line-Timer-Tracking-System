@@ -5,6 +5,8 @@
 A timer tracking system for production lines. This full-stack web application enables workers to track the duration of a production process, enter defect counts, and manage extended work time after the scheduled duration has passed.
 
 ## 🛠️ Tech Stack
+<img width="886" height="489" alt="image" src="https://github.com/user-attachments/assets/21257312-9ad9-4635-b5b4-5d35ec8d6ffc" />
+
 
 ### Frontend
 
@@ -273,25 +275,3 @@ State restoration using localStorage + server time sync
 - **Database**: Optimized MongoDB indexes
 - **Communication**: Efficient real-time communication via SSE
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is developed for KPM Power Inc. as a technical assessment.
-
----
-
-**🎯 This system enables accurate time tracking, productivity analysis, and quality management in manufacturing environments.**
-
-## 📞 Contact
-
-**Developer**: Makoto  
-**Company**: KPM Power Inc.  
-**Email**: Anesha@kpmpower.com  
-**Submission Date**: August 09, 2025
