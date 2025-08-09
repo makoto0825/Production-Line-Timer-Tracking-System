@@ -2,7 +2,8 @@
 
 ## 📋 Project Overview
 
-A timer tracking system for production lines. This full-stack web application enables workers to track the duration of a production process, enter defect counts, and manage extended work time after the scheduled duration has passed.
+This application is a full-stack web application designed to accurately measure and record production line working time.
+It enables workers to manage the progress of the production process, record defect counts, and manage extended work when the scheduled time is exceeded.
 
 ## 🛠️ Tech Stack
 <img width="886" height="489" alt="image" src="https://github.com/user-attachments/assets/21257312-9ad9-4635-b5b4-5d35ec8d6ffc" />
@@ -33,21 +34,24 @@ A timer tracking system for production lines. This full-stack web application en
 ## 🎯 Main Features
 
 ### 🔐 Page 1: Login & Build Selection
+<img width="1901" height="978" alt="image" src="https://github.com/user-attachments/assets/5797693c-5f55-4a7f-ade2-539309093344" />
+
 
 - Authentication by Login ID and Build Number
 - Automatically fetch and display build information from the database
-- Record session start time
 - Prevent duplicate login for the same user
 
 ### ⏱️ Page 2: Timer & Work Tracking
+<img width="1716" height="963" alt="image" src="https://github.com/user-attachments/assets/38d6cf7f-ee57-4031-80bf-501d2c89ff1f" />
+
+<img width="1167" height="946" alt="image" src="https://github.com/user-attachments/assets/a9d5caa4-bf52-49a0-9215-715b322dbda4" />
+
+<img width="1310" height="982" alt="image" src="https://github.com/user-attachments/assets/94ea01de-0dd9-47ad-be81-d9e58cdd207b" />
 
 - **Real-time timer**: Dynamic countdown based on parts count × time per part
 - **Pause function**: Exclude time during work interruption
 - **Defect entry**: Save in real-time
 - **Server time sync**: Accurate time management via Server-Sent Events
-
-### 🚨 Overtime Management System
-
 - **Smart popup**: Automatic modal display when the timer exceeds zero
 - **Countdown function**: Configurable wait time (default 10 minutes)
 - **Continuation confirmation**: YES/NO selection to decide whether to continue work
@@ -56,10 +60,36 @@ A timer tracking system for production lines. This full-stack web application en
 - **State persistence**: Handles page reloads and closures
 
 ### 📄 Page 3: Final Submission
+<img width="1627" height="967" alt="image" src="https://github.com/user-attachments/assets/49ccec9c-f7dc-4304-8eb9-a0ca97348315" />
+
 
 - **Finished parts input**: Input field
 - **Back function**: Return to timer page (with data retention)
 - **Manual submit**: Send comprehensive session data
+
+## 🧪 Testing Instructions
+<img width="522" height="445" alt="image" src="https://github.com/user-attachments/assets/0b20a996-e9a1-43f2-8799-3a9480cc8743" />
+
+When testing the application:
+Go to the Login page.
+
+https://production-timer-frontend.onrender.com
+
+Enter any value for Login ID (free input).
+For Build Number, use one of the following test values:
+
+- B00001
+- B00002
+- B00003
+- B00004
+- B00005
+- B00006
+- B00007
+
+This data is pre-saved in the database.
+
+<span style="color:red">**⚠️ Note:** The application is hosted on Render’s free plan, so the first backend connection during login may take a few minutes. Once the connection is established, subsequent requests will respond without delay.</span>
+
 
 ## 🗃️ Database Schema
 
@@ -168,7 +198,7 @@ npm install
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb+srv://makoto:Makoto0825@cluster0.rx68s45.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=　your mongoDB URI
 FRONTEND_URL=http://localhost:5173
 DEFAULT_LOCK_TTL_MINUTES=120
 ```
@@ -232,7 +262,6 @@ npm run dev
 ### Security Measures
 
 - **CORS Settings**: Restrict to appropriate origins
-- **Input Validation**: Validation on both frontend and backend
 - **Session Lock**: Prevent concurrent logins
 
 ## 🔧 Key Design Decisions
