@@ -51,22 +51,12 @@ export const createPauseRecord = (): PauseRecord => {
 export const updatePauseRecord = (
   pauseRecords: PauseRecord[]
 ): PauseRecord[] => {
-  console.log('updatePauseRecord - input:', pauseRecords);
-
   const result = pauseRecords.map((record, index) => {
-    console.log(
-      `Record ${index}:`,
-      record,
-      'endTime exists:',
-      !!record.endTime
-    );
-
     if (index === pauseRecords.length - 1 && !record.endTime) {
       const updatedRecord = {
         ...record,
         endTime: nowIso(),
       };
-      console.log(`Updating record ${index}:`, updatedRecord);
       return updatedRecord;
     }
     return record;
@@ -84,7 +74,7 @@ export const calculateTotalPausedTime = (
   return pauseRecords.reduce((total, pause) => {
     const endTime = pause.endTime ? new Date(pause.endTime) : nowDate();
     const duration =
-      (endTime.getTime() - new Date(pause.startTime).getTime()) / 1000; // 秒単位
+      (endTime.getTime() - new Date(pause.startTime).getTime()) / 1000; // seconds
     return total + duration;
   }, 0);
 };

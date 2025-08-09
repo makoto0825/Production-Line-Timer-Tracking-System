@@ -57,7 +57,6 @@ export const useFinalSubmission = () => {
           totalParts: parseInt(newValue) || 0,
         };
         localStorage.setItem('sessionData', JSON.stringify(updated));
-        console.log('Updated totalParts in session data:', updated.totalParts);
       } catch (e) {
         console.warn('Failed to update session data:', e);
       }
@@ -66,7 +65,6 @@ export const useFinalSubmission = () => {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    console.log('Manual submitting session data...');
 
     try {
       const sessionData = localStorage.getItem('sessionData');
@@ -126,8 +124,6 @@ export const useFinalSubmission = () => {
       if (!res.ok) {
         throw new Error(`Submission failed with status: ${res.status}`);
       }
-
-      console.log('Manual session submission succeeded');
 
       // Best-effort release of session lock
       try {
