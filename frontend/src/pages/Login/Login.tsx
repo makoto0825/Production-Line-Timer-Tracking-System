@@ -88,6 +88,18 @@ const Login = () => {
               {isLoading ? 'Checking...' : 'Login'}
             </button>
           </form>
+
+          {/* How to Use / External Link */}
+          <div className='mt-6'>
+            <a
+              href='https://github.com/makoto0825/Production-Line-Timer-Tracking-System'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block w-full text-center border border-pink-500 text-pink-600 font-semibold py-3 px-4 rounded-xl hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 bg-white/70'
+            >
+              How to Use (GitHub)
+            </a>
+          </div>
         </div>
       </div>
     </div>
