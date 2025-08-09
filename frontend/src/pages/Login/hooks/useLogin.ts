@@ -6,6 +6,11 @@ import {
   loginErrorConfig,
   connectionErrorConfig,
 } from '../../../modalUI/swalConfigs';
+import {
+  initSSE,
+  getLatestServerTime,
+  subscribeSSE,
+} from '../../Timer/utils/serverTimeClient';
 
 // Build data interface
 interface BuildData {
@@ -26,6 +31,34 @@ export const useLogin = () => {
   const [buildNumber, setBuildNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [buildData, setBuildData] = useState<BuildData | null>(null);
+
+  // Wait for server time via SSE with timeout fallback
+  const waitForServerNow = async (timeoutMs: number = 2000): Promise<Date> => {
+    try {
+      initSSE();
+      const existing = getLatestServerTime();
+      if (existing) return existing;
+
+      return await new Promise<Date>((resolve) => {
+        let unsub: (() => void) | null = null;
+        const timeoutId = setTimeout(() => {
+          if (unsub) unsub();
+          resolve(new Date());
+        }, timeoutMs);
+
+        unsub = subscribeSSE(() => {
+          const now = getLatestServerTime();
+          if (now) {
+            clearTimeout(timeoutId);
+            if (unsub) unsub();
+            resolve(now);
+          }
+        });
+      });
+    } catch {
+      return new Date();
+    }
+  };
 
   // Handle submit login
   const handleSubmitLogin = async (e: React.FormEvent) => {
@@ -75,8 +108,9 @@ export const useLogin = () => {
             return; // do not proceed
           }
 
-          // Store start time and save to localStorage with all keys initialized
-          const startTime = new Date().toISOString();
+          // Store start time using server time when available
+          const serverNow = await waitForServerNow();
+          const startTime = serverNow.toISOString();
           const sessionData = {
             loginId,
             buildData,
