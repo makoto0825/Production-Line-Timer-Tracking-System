@@ -20,7 +20,6 @@ const Timer = () => {
   useEffect(() => {
     const sessionData = localStorage.getItem('sessionData');
     if (!sessionData) {
-      console.log('No session data found, redirecting to login');
       navigate('/login');
     }
   }, [navigate]);
