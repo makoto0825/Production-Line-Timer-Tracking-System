@@ -118,11 +118,6 @@ export const checkScheduledPopup = (): boolean => {
     return false;
   }
 
-  // Validate and restore scheduled popup state
-  if (!validateScheduledPopup()) {
-    return false;
-  }
-
   const currentActiveTime = calculateActiveTime(
     sessionData.startTime,
     sessionData.totalPausedTime
@@ -155,24 +150,6 @@ export const calculateActiveTime = (
 // ============================================================================
 
 // Validate and restore scheduled popup state
-const validateScheduledPopup = (): boolean => {
-  const sessionData = getSessionData();
-  if (!sessionData?.isPopupScheduled || !sessionData?.nextPopupActiveTime) {
-    return false;
-  }
-
-  const currentActiveTime = calculateActiveTime(
-    sessionData.startTime,
-    sessionData.totalPausedTime
-  );
-
-  // Allow popup even if the scheduled time has already passed slightly
-  // to avoid missing the popup due to timer drift.
-  console.log(
-    `Scheduled popup check. Current: ${currentActiveTime}s, Scheduled: ${sessionData.nextPopupActiveTime}s`
-  );
-  return true;
-};
 
 // Resume existing countdown without creating new popup
 const resumeExistingCountdown = async () => {

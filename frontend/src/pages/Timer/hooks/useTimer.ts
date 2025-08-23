@@ -84,13 +84,12 @@ export const useTimer = () => {
 
       setTimeLeft(formatTime(timeLeftSeconds));
 
-      // Check for scheduled popup (considering pause time)
+      // Check for scheduled popup for second time popup
       if (checkScheduledPopup()) {
         return;
       }
 
-      // Time-up detection: when timeLeft becomes 0 or negative
-      // But respect scheduled popup grace period
+      // Time-up detection: when timeLeft becomes 0 or negative for the first time
       if (timeLeftSeconds <= 0) {
         // Check if popup is already active
         if (sessionData.popupCountdownActive) {
