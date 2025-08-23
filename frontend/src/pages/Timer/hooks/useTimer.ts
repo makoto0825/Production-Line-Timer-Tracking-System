@@ -33,7 +33,6 @@ export const useTimer = () => {
   // ===== STATE MANAGEMENT =====
   const [defects, setDefects] = useState('');
   const [timeLeft, setTimeLeft] = useState('00:00:00');
-  const [hasTimeUpPopupShown, setHasTimeUpPopupShown] = useState(false);
 
   // ===== SESSION MANAGEMENT =====
   // Check session data and redirect if not exists
@@ -50,7 +49,6 @@ export const useTimer = () => {
     // Check if popup countdown should be resumed
     if (checkPopupCountdownOnLoad()) {
       // Show popup if countdown is still active
-      setHasTimeUpPopupShown(true); // Set flag to prevent double popup
       return; // Popup countdown is being handled by checkPopupCountdownOnLoad
     }
 
@@ -88,13 +86,17 @@ export const useTimer = () => {
 
       // Check for scheduled popup (considering pause time)
       if (checkScheduledPopup()) {
-        setHasTimeUpPopupShown(true);
         return;
       }
 
       // Time-up detection: when timeLeft becomes 0 or negative
       // But respect scheduled popup grace period
-      if (timeLeftSeconds <= 0 && !hasTimeUpPopupShown) {
+      if (timeLeftSeconds <= 0) {
+        // Check if popup is already active
+        if (sessionData.popupCountdownActive) {
+          return;
+        }
+
         // Check if there's a scheduled popup with grace period
         if (sessionData.isPopupScheduled && sessionData.nextPopupActiveTime) {
           const currentActiveTime = calculateActiveTime(
@@ -108,7 +110,6 @@ export const useTimer = () => {
           }
         }
 
-        setHasTimeUpPopupShown(true);
         handleTimeUpPopup();
       }
     });
@@ -116,7 +117,7 @@ export const useTimer = () => {
     return () => {
       unsubscribe();
     };
-  }, [hasTimeUpPopupShown]);
+  }, []);
 
   // ===== PAUSE FUNCTIONALITY =====
   // Handle pause start
