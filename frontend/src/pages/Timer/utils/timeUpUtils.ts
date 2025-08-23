@@ -27,6 +27,9 @@ const POPUP_INTERVAL = parseInt(
 // Helper: get server "now" (fallback to client time)
 const getServerNow = (): Date => getLatestServerTime() ?? new Date();
 
+// Global unsubscribe function for SSE
+let unsubscribe: (() => void) | null = null;
+
 // ============================================================================
 // interface
 // ============================================================================
@@ -35,12 +38,6 @@ const getServerNow = (): Date => getLatestServerTime() ?? new Date();
 interface PopupTimeData {
   popupStartTime: string;
   popupEndTime: string;
-}
-
-interface CountdownState {
-  interval: number | null;
-  isActive: boolean;
-  unsubscribe: (() => void) | null;
 }
 
 interface PopupInteraction {
@@ -64,18 +61,11 @@ export const handleTimeUpPopup = async () => {
     // Update session data
     updateSessionWithPopupData(popupData);
 
-    // Initialize countdown state
-    const countdownState: CountdownState = {
-      interval: null,
-      isActive: true,
-      unsubscribe: null,
-    };
-
     // Create custom popup with countdown
     const result = await Swal.fire({
       ...timeUpPopupConfig,
-      didOpen: () => setupCountdown(countdownState, handleAutoSubmit),
-      willClose: () => cleanupCountdown(countdownState),
+      didOpen: () => setupCountdown(handleAutoSubmit),
+      willClose: () => cleanupCountdown(),
     });
 
     // Handle user interaction
@@ -156,18 +146,11 @@ const resumeExistingCountdown = async () => {
   // Ensure SSE is initialized (idempotent)
   initSSE();
 
-  // Initialize countdown state
-  const countdownState: CountdownState = {
-    interval: null,
-    isActive: true,
-    unsubscribe: null,
-  };
-
   // Create popup with existing countdown
   const result = await Swal.fire({
     ...timeUpPopupConfig,
-    didOpen: () => setupCountdown(countdownState, handleAutoSubmit),
-    willClose: () => cleanupCountdown(countdownState),
+    didOpen: () => setupCountdown(handleAutoSubmit),
+    willClose: () => cleanupCountdown(),
   });
 
   // Handle user interaction
@@ -313,10 +296,7 @@ const calculateRemainingTimeMs = (): number => {
 };
 
 // Handle countdown update
-const handleCountdownUpdate = (
-  countdownState: CountdownState,
-  onTimeUp: () => void | Promise<void>
-): void => {
+const handleCountdownUpdate = (onTimeUp: () => void | Promise<void>): void => {
   const remainingSeconds = calculateRemainingTime();
   const remainingMs = calculateRemainingTimeMs();
 
@@ -325,13 +305,9 @@ const handleCountdownUpdate = (
 
   // Check if countdown reached 0 using millisecond precision
   if (remainingMs <= 0) {
-    if (countdownState.interval) {
-      clearInterval(countdownState.interval);
-      countdownState.interval = null;
-    }
-    if (countdownState.unsubscribe) {
-      countdownState.unsubscribe();
-      countdownState.unsubscribe = null;
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
     }
     onTimeUp();
     Swal.close();
@@ -339,29 +315,21 @@ const handleCountdownUpdate = (
 };
 
 // Setup countdown functionality (driven by server time via SSE)
-const setupCountdown = (
-  countdownState: CountdownState,
-  onTimeUp: () => void | Promise<void>
-): void => {
+const setupCountdown = (onTimeUp: () => void | Promise<void>): void => {
   // Initial update
-  handleCountdownUpdate(countdownState, onTimeUp);
+  handleCountdownUpdate(onTimeUp);
 
   // Subscribe to SSE server time updates to drive countdown
-  countdownState.unsubscribe = subscribeSSE(() => {
-    handleCountdownUpdate(countdownState, onTimeUp);
+  unsubscribe = subscribeSSE(() => {
+    handleCountdownUpdate(onTimeUp);
   });
 };
 
 // Cleanup countdown
-const cleanupCountdown = (countdownState: CountdownState): void => {
-  if (countdownState.interval) {
-    clearInterval(countdownState.interval);
-    countdownState.interval = null;
-  }
-
-  if (countdownState.unsubscribe) {
-    countdownState.unsubscribe();
-    countdownState.unsubscribe = null;
+const cleanupCountdown = (): void => {
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
   }
 
   // Clear popup countdown status from session data
