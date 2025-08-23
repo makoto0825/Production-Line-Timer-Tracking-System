@@ -87,12 +87,10 @@ export const updateSessionToPaused = (
   const pauseRecords = sessionData.pauseRecords || [];
 
   const updatedPauseRecords = [...pauseRecords, pauseRecord];
-  const totalPausedTime = calculateTotalPausedTime(updatedPauseRecords);
 
   const result = {
     ...sessionData,
     pauseRecords: updatedPauseRecords,
-    totalPausedTime,
     status: 'paused',
   };
 
